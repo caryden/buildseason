@@ -4,7 +4,10 @@ type LayoutProps = PropsWithChildren<{
   title?: string;
 }>;
 
-export const Layout: FC<LayoutProps> = ({ children, title = "BuildSeason" }) => {
+export const Layout: FC<LayoutProps> = ({
+  children,
+  title = "BuildSeason",
+}) => {
   return (
     <html lang="en">
       <head>
@@ -26,6 +29,8 @@ export const Layout: FC<LayoutProps> = ({ children, title = "BuildSeason" }) => 
         ></script>
         {/* HTMX config */}
         <meta name="htmx-config" content='{"defaultSwapStyle":"innerHTML"}' />
+        {/* App styles */}
+        <link rel="stylesheet" href="/public/styles.css" />
       </head>
       <body class="bg-gray-50 text-gray-900" hx-boost="true">
         {children}

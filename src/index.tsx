@@ -1,11 +1,16 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
+import { serveStatic } from "hono/bun";
 import { Layout } from "./components/Layout";
 import { auth } from "./lib/auth";
 import { sessionMiddleware } from "./middleware/auth";
+import authRoutes from "./routes/auth";
 
 const app = new Hono();
+
+// Static files
+app.use("/public/*", serveStatic({ root: "./src" }));
 
 // Middleware
 app.use("*", logger());
@@ -14,6 +19,9 @@ app.use("*", sessionMiddleware);
 
 // Better-Auth API routes
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
+
+// Mount route modules
+app.route("/", authRoutes);
 
 // Health check
 app.get("/health", (c) => c.json({ status: "ok" }));
