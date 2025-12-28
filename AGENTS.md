@@ -47,11 +47,20 @@ bun run dev
 
 ## Development Workflow
 
+**CRITICAL: All work MUST go through beads. Create beads BEFORE writing code.**
+
 1. **Pick a task:** `bd ready` to find unblocked work
 2. **Claim it:** `bd update <id> --status in_progress`
 3. **Do the work:** Write code, following existing patterns
 4. **Verify:** `bun run typecheck && bun run lint && bun test` (all must pass)
-5. **Complete:** `bd close <id> --reason "Brief summary"`
+5. **Complete:** `bd close <id> -r "Brief summary"`
+
+### Beads-First Rule
+
+- **NEVER** start coding without a bead to track the work
+- If no bead exists, create one first: `bd create "Description" -t task`
+- This ensures all work is tracked, discoverable, and can be parallelized
+- Even small fixes should have beads - it takes 5 seconds to create one
 
 ## Code Patterns
 
