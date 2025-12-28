@@ -6,6 +6,8 @@ import { Layout } from "./components/Layout";
 import { auth } from "./lib/auth";
 import { sessionMiddleware } from "./middleware/auth";
 import authRoutes from "./routes/auth";
+import teamRoutes from "./routes/teams";
+import partsRoutes from "./routes/parts";
 
 const app = new Hono();
 
@@ -22,6 +24,8 @@ app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 
 // Mount route modules
 app.route("/", authRoutes);
+app.route("/", teamRoutes);
+app.route("/", partsRoutes);
 
 // Health check
 app.get("/health", (c) => c.json({ status: "ok" }));
