@@ -202,6 +202,69 @@ describe("GET /api/parts", () => {
 - Drizzle ORM internals
 - Third-party API behavior
 
+## UI Validation with Playwright
+
+**All UI beads must be tested with Playwright before closing.**
+
+The Playwright MCP server is available for browser automation. Use it to validate UI changes actually work in the browser.
+
+### When to Use Playwright
+
+- Any bead that adds/modifies UI components
+- Form submissions and validation
+- Navigation flows
+- HTMX interactions
+- Visual layout verification
+
+### Playwright Testing Checklist
+
+Before closing a UI bead:
+
+1. Navigate to the affected page(s)
+2. Verify elements render correctly (`browser_snapshot`)
+3. Test interactive elements (clicks, form fills)
+4. Verify navigation works as expected
+5. Check for console errors (`browser_console_messages`)
+
+### Example Workflow
+
+```
+# Navigate to the page
+browser_navigate -> http://localhost:3000/teams/xxx/parts
+
+# Take accessibility snapshot (better than screenshot for verification)
+browser_snapshot
+
+# Test form interaction
+browser_click -> "Add Part" button
+browser_fill_form -> fill part details
+browser_click -> Submit
+
+# Verify success
+browser_snapshot -> confirm redirect/success message
+```
+
+### Authentication Note
+
+Playwright runs in its own browser context without your session cookies. For testing authenticated routes:
+
+- Public routes can be tested directly
+- Protected routes will redirect to login (this verifies auth middleware works)
+- For full authenticated testing, log in via the OAuth flow in the Playwright browser first
+
+### Playwright Tools Available
+
+| Tool                       | Use For                            |
+| -------------------------- | ---------------------------------- |
+| `browser_navigate`         | Go to URL                          |
+| `browser_snapshot`         | Get accessibility tree (preferred) |
+| `browser_take_screenshot`  | Visual screenshot                  |
+| `browser_click`            | Click elements                     |
+| `browser_type`             | Type text                          |
+| `browser_fill_form`        | Fill multiple form fields          |
+| `browser_select_option`    | Select dropdown options            |
+| `browser_console_messages` | Check for JS errors                |
+
 ## Model Recommendations (Labels)
 
 Use labels to specify which model should handle a bead. This helps route simple work to faster/cheaper models and complex work to more capable ones.

@@ -1,5 +1,8 @@
 {
   "enabledPlugins": {
     "beads@beads-marketplace": true
+  },
+  "permissions": {
+    "allow": ["mcp__playwright__*"]
   }
 }

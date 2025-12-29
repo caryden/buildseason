@@ -21,6 +21,11 @@ import { requireMentor } from "../middleware/auth";
 
 const app = new Hono<{ Variables: AuthVariables & TeamVariables }>();
 
+// Escape SQL LIKE wildcards to prevent pattern injection
+function escapeLikePattern(value: string): string {
+  return value.replace(/[%_\\]/g, "\\$&");
+}
+
 // Apply auth to /teams/* routes only (not globally to avoid catching /api/auth/*)
 app.use("/teams/*", requireAuth);
 
@@ -51,13 +56,14 @@ app.get("/teams/:teamId/parts", teamMiddleware, async (c) => {
     .where(eq(parts.teamId, teamId))
     .$dynamic();
 
-  // Add search filter
+  // Add search filter (escape wildcards to prevent LIKE pattern injection)
   if (search) {
+    const escaped = escapeLikePattern(search);
     query = query.where(
       or(
-        like(parts.name, `%${search}%`),
-        like(parts.sku, `%${search}%`),
-        like(parts.location, `%${search}%`)
+        like(parts.name, `%${escaped}%`),
+        like(parts.sku, `%${escaped}%`),
+        like(parts.location, `%${escaped}%`)
       )
     );
   }
