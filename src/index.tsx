@@ -19,22 +19,25 @@ app.use("/public/*", serveStatic({ root: "./src" }));
 // Middleware
 app.use("*", logger());
 app.use("*", secureHeaders());
+
+// Better-Auth API routes - must be before session middleware
+// IMPORTANT: Hono's wildcard (*) only matches a SINGLE path segment.
+// Better-Auth uses nested paths like /api/auth/callback/github (3 segments after /api/auth/)
+// We need separate patterns for each depth level:
+//   /api/auth/*       -> /api/auth/session, /api/auth/csrf
+//   /api/auth/*/*     -> /api/auth/sign-in/email, /api/auth/sign-in/social
+//   /api/auth/*/*/*   -> /api/auth/callback/github, /api/auth/callback/google
+app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/api/auth/*/*", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/api/auth/*/*/*", (c) => auth.handler(c.req.raw));
+
+// Session middleware for all other routes
 app.use("*", sessionMiddleware);
 
-// Better-Auth API routes
-app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
-
-// Mount route modules
-app.route("/", authRoutes);
-app.route("/", teamRoutes);
-app.route("/", partsRoutes);
-app.route("/", ordersRoutes);
-app.route("/", vendorsRoutes);
-
-// Health check
+// Health check (public)
 app.get("/health", (c) => c.json({ status: "ok" }));
 
-// Home page
+// Home page (public) - defined before protected route modules
 app.get("/", (c) => {
   return c.html(
     <Layout title="BuildSeason">
@@ -66,6 +69,13 @@ app.get("/", (c) => {
     </Layout>
   );
 });
+
+// Mount route modules (auth routes have their own public pages)
+app.route("/", authRoutes);
+app.route("/", teamRoutes);
+app.route("/", partsRoutes);
+app.route("/", ordersRoutes);
+app.route("/", vendorsRoutes);
 
 const port = process.env.PORT || 3000;
 console.log(`🚀 BuildSeason running at http://localhost:${port}`);

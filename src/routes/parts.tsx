@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { Layout } from "../components/Layout";
+import { SignOutButton } from "../components/SocialAuth";
 import {
   requireAuth,
   teamMiddleware,
@@ -117,14 +118,7 @@ app.get("/teams/:teamId/parts", teamMiddleware, async (c) => {
             </div>
             <div class="flex items-center gap-4">
               <span class="text-sm text-gray-600">{user.name}</span>
-              <form action="/api/auth/sign-out" method="post">
-                <button
-                  type="submit"
-                  class="text-sm text-gray-500 hover:text-gray-700"
-                >
-                  Sign out
-                </button>
-              </form>
+              <SignOutButton class="text-sm text-gray-500 hover:text-gray-700" />
             </div>
           </div>
         </nav>
@@ -408,14 +402,7 @@ app.get(
               </div>
               <div class="flex items-center gap-4">
                 <span class="text-sm text-gray-600">{user.name}</span>
-                <form action="/api/auth/sign-out" method="post">
-                  <button
-                    type="submit"
-                    class="text-sm text-gray-500 hover:text-gray-700"
-                  >
-                    Sign out
-                  </button>
-                </form>
+                <SignOutButton class="text-sm text-gray-500 hover:text-gray-700" />
               </div>
             </div>
           </nav>
@@ -747,14 +734,7 @@ app.get("/teams/:teamId/parts/:partId", teamMiddleware, async (c) => {
             </div>
             <div class="flex items-center gap-4">
               <span class="text-sm text-gray-600">{user.name}</span>
-              <form action="/api/auth/sign-out" method="post">
-                <button
-                  type="submit"
-                  class="text-sm text-gray-500 hover:text-gray-700"
-                >
-                  Sign out
-                </button>
-              </form>
+              <SignOutButton class="text-sm text-gray-500 hover:text-gray-700" />
             </div>
           </div>
         </nav>
@@ -915,14 +895,7 @@ app.get(
               </div>
               <div class="flex items-center gap-4">
                 <span class="text-sm text-gray-600">{user.name}</span>
-                <form action="/api/auth/sign-out" method="post">
-                  <button
-                    type="submit"
-                    class="text-sm text-gray-500 hover:text-gray-700"
-                  >
-                    Sign out
-                  </button>
-                </form>
+                <SignOutButton class="text-sm text-gray-500 hover:text-gray-700" />
               </div>
             </div>
           </nav>

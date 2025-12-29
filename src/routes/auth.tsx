@@ -1,30 +1,8 @@
 import { Hono } from "hono";
 import { Layout } from "../components/Layout";
 import { SocialAuthButtons, Divider } from "../components/SocialAuth";
-import { auth } from "../lib/auth";
 
 const app = new Hono();
-
-// OAuth redirect routes - these call Better Auth's API and redirect to the provider
-app.get("/auth/github", async (c) => {
-  const response = await auth.api.signInSocial({
-    body: { provider: "github", callbackURL: "/dashboard" },
-  });
-  if (response.url) {
-    return c.redirect(response.url);
-  }
-  return c.redirect("/login?error=Failed%20to%20start%20GitHub%20auth");
-});
-
-app.get("/auth/google", async (c) => {
-  const response = await auth.api.signInSocial({
-    body: { provider: "google", callbackURL: "/dashboard" },
-  });
-  if (response.url) {
-    return c.redirect(response.url);
-  }
-  return c.redirect("/login?error=Failed%20to%20start%20Google%20auth");
-});
 
 // Registration page
 app.get("/register", (c) => {
@@ -286,11 +264,6 @@ app.get("/login", (c) => {
       </div>
     </Layout>
   );
-});
-
-// Logout action
-app.post("/logout", async (c) => {
-  return c.redirect("/login?message=You%20have%20been%20signed%20out");
 });
 
 export default app;

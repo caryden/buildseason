@@ -29,24 +29,100 @@ const GoogleIcon: FC = () => (
   </svg>
 );
 
+/**
+ * Social OAuth buttons for GitHub and Google authentication.
+ *
+ * IMPLEMENTATION NOTE: We use JavaScript fetch() instead of direct links because:
+ * 1. Better-Auth requires JSON content-type (rejects form submissions)
+ * 2. Better-Auth returns the OAuth redirect URL in JSON response, not as HTTP redirect
+ * 3. Using fetch with credentials: 'include' ensures the OAuth state cookie is saved
+ * 4. This approach also bypasses HTMX's hx-boost which would intercept regular links
+ */
 export const SocialAuthButtons: FC = () => (
   <div class="space-y-3">
-    <a
-      href="/auth/github"
+    <button
+      type="button"
+      onclick="signInWithSocial('github')"
       class="w-full flex items-center justify-center gap-3 py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
     >
       <GitHubIcon />
       <span>Continue with GitHub</span>
-    </a>
+    </button>
 
-    <a
-      href="/auth/google"
+    <button
+      type="button"
+      onclick="signInWithSocial('google')"
       class="w-full flex items-center justify-center gap-3 py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
     >
       <GoogleIcon />
       <span>Continue with Google</span>
-    </a>
+    </button>
+
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+        async function signInWithSocial(provider) {
+          try {
+            const res = await fetch('/api/auth/sign-in/social', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ provider: provider, callbackURL: '/dashboard' }),
+              credentials: 'include'
+            });
+            const data = await res.json();
+            if (data.url) {
+              window.location.href = data.url;
+            } else if (data.error) {
+              alert('Error: ' + data.message);
+            }
+          } catch (err) {
+            console.error('OAuth error:', err);
+            alert('Failed to start authentication');
+          }
+        }
+      `,
+      }}
+    />
   </div>
+);
+
+/**
+ * Sign out button that properly handles Better-Auth's JSON response.
+ * Uses JavaScript fetch to call the sign-out endpoint and redirect on success.
+ */
+export const SignOutButton: FC<{ class?: string }> = ({ class: className }) => (
+  <>
+    <button
+      type="button"
+      onclick="signOut()"
+      class={
+        className ||
+        "px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+      }
+    >
+      Sign out
+    </button>
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+        async function signOut() {
+          try {
+            const res = await fetch('/api/auth/sign-out', {
+              method: 'POST',
+              credentials: 'include'
+            });
+            if (res.ok) {
+              window.location.href = '/login';
+            }
+          } catch (err) {
+            console.error('Sign out error:', err);
+            window.location.href = '/login';
+          }
+        }
+      `,
+      }}
+    />
+  </>
 );
 
 export const Divider: FC = () => (

@@ -47,6 +47,8 @@ export const accounts = sqliteTable("accounts", {
   providerId: text("provider_id").notNull(),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
+  // Better-Auth expects 'idToken' as the JS property name for OpenID Connect providers
+  idToken: text("id_token"),
   accessTokenExpiresAt: integer("access_token_expires_at", {
     mode: "timestamp",
   }),

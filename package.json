@@ -4,7 +4,8 @@
   "description": "Open-source team management platform for FTC robotics teams",
   "type": "module",
   "scripts": {
-    "dev": "bun run --hot src/index.tsx",
+    "dev": "turso dev --db-file local.db & sleep 1 && bun run --hot src/index.tsx",
+    "dev:app": "bun run --hot src/index.tsx",
     "dev:db": "turso dev --db-file local.db",
     "start": "bun run src/index.tsx",
     "db:generate": "drizzle-kit generate",
