@@ -14,8 +14,8 @@ import { requireMentor } from "../middleware/auth";
 
 const app = new Hono<{ Variables: AuthVariables & TeamVariables }>();
 
-// Apply auth middleware
-app.use("*", requireAuth);
+// Apply auth to /teams/* routes only (not globally to avoid catching /api/auth/*)
+app.use("/teams/*", requireAuth);
 
 // Subsystem display names and colors
 const subsystemConfig: Record<

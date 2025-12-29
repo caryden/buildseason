@@ -15,8 +15,10 @@ import { eq, and, sql } from "drizzle-orm";
 
 const app = new Hono<{ Variables: AuthVariables }>();
 
-// Apply auth to all team routes
-app.use("*", requireAuth);
+// Apply auth to team routes only (not globally to avoid catching /api/auth/*)
+app.use("/dashboard", requireAuth);
+app.use("/teams/*", requireAuth);
+app.use("/invite/*", requireAuth);
 
 // Dashboard - show user's teams with stats
 app.get("/dashboard", async (c) => {
