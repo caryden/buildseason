@@ -10,6 +10,7 @@ import { db } from "../db";
 import {
   teams,
   teamMembers,
+  teamInvites,
   parts,
   orders,
   orderItems,
@@ -816,6 +817,132 @@ const teamVendorsRoutes = new Hono<{
     return c.json(vendorsList);
   });
 
+// ============ Invite Routes ============
+const inviteRoutes = new Hono<{ Variables: AuthVariables }>()
+  .use("*", requireAuth)
+  .get("/:token", async (c) => {
+    const token = c.req.param("token");
+    const user = c.get("user")!;
+
+    const invite = await db.query.teamInvites.findFirst({
+      where: eq(teamInvites.token, token),
+      with: { team: true },
+    });
+
+    if (!invite) {
+      return c.json({ error: "Invalid invite code", code: "invalid" }, 404);
+    }
+
+    if (new Date() > invite.expiresAt) {
+      return c.json({ error: "Invite code has expired", code: "expired" }, 400);
+    }
+
+    if (invite.usedAt) {
+      return c.json(
+        { error: "Invite code has already been used", code: "used" },
+        400
+      );
+    }
+
+    // Check if user is already a member
+    const existingMembership = await db.query.teamMembers.findFirst({
+      where: (tm, { and, eq }) =>
+        and(eq(tm.userId, user.id), eq(tm.teamId, invite.teamId)),
+    });
+
+    if (existingMembership) {
+      return c.json({
+        alreadyMember: true,
+        team: {
+          id: invite.team.id,
+          program: invite.team.program,
+          name: invite.team.name,
+          number: invite.team.number,
+        },
+      });
+    }
+
+    return c.json({
+      team: {
+        id: invite.team.id,
+        program: invite.team.program,
+        name: invite.team.name,
+        number: invite.team.number,
+      },
+      role: invite.role,
+    });
+  })
+  .post("/:token", async (c) => {
+    const token = c.req.param("token");
+    const user = c.get("user")!;
+
+    const invite = await db.query.teamInvites.findFirst({
+      where: eq(teamInvites.token, token),
+      with: { team: true },
+    });
+
+    if (!invite) {
+      return c.json({ error: "Invalid invite code", code: "invalid" }, 404);
+    }
+
+    if (new Date() > invite.expiresAt) {
+      return c.json({ error: "Invite code has expired", code: "expired" }, 400);
+    }
+
+    if (invite.usedAt) {
+      return c.json(
+        { error: "Invite code has already been used", code: "used" },
+        400
+      );
+    }
+
+    // Check if user is already a member
+    const existingMembership = await db.query.teamMembers.findFirst({
+      where: (tm, { and, eq }) =>
+        and(eq(tm.userId, user.id), eq(tm.teamId, invite.teamId)),
+    });
+
+    if (existingMembership) {
+      return c.json({
+        success: true,
+        alreadyMember: true,
+        team: {
+          program: invite.team.program,
+          number: invite.team.number,
+        },
+      });
+    }
+
+    try {
+      const memberId = crypto.randomUUID();
+
+      // Add user to team
+      await db.insert(teamMembers).values({
+        id: memberId,
+        userId: user.id,
+        teamId: invite.teamId,
+        role: invite.role,
+      });
+
+      // Mark invite as used
+      await db
+        .update(teamInvites)
+        .set({ usedAt: new Date() })
+        .where(eq(teamInvites.id, invite.id));
+
+      return c.json({
+        success: true,
+        team: {
+          program: invite.team.program,
+          number: invite.team.number,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to accept invite:", error);
+      return c.json({ error: "Failed to join team" }, 500);
+    }
+  });
+
 // ============ Compose API Routes ============
 const apiRoutes = new Hono()
   .route("/api/user", userRoutes)
@@ -825,7 +952,8 @@ const apiRoutes = new Hono()
   .route("/api/teams/:teamId/orders", teamOrdersRoutes)
   .route("/api/teams/:teamId/bom", teamBomRoutes)
   .route("/api/teams/:teamId/vendors", teamVendorsRoutes)
-  .route("/api/vendors", vendorsRoutes);
+  .route("/api/vendors", vendorsRoutes)
+  .route("/api/invite", inviteRoutes);
 
 // Export type for Hono RPC client
 export type ApiRoutes = typeof apiRoutes;

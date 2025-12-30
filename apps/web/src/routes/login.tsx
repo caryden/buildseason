@@ -30,7 +30,7 @@ function LoginPage() {
     try {
       await signIn.social({
         provider,
-        callbackURL: redirect || "/dashboard",
+        callbackURL: redirect || "/onboarding",
       });
     } catch (error) {
       console.error("Sign in error:", error);
