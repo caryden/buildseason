@@ -90,6 +90,14 @@ git commit -m "Complete <bead-id>: <brief description>"
 
 This creates recovery points. If something goes wrong later, you can revert to the last known-good state.
 
+### Compact After Each Bead (MANDATORY)
+
+**After committing a bead checkpoint, request context compaction.**
+
+This forces you to rely on what's written in files (specs, AGENTS.md, beads) rather than in-conversation memory. Decisions and learnings that aren't encoded in files will be lost - which is the point. If something matters, it must be written down.
+
+Tell the user: "Bead complete and committed. Requesting compaction before next task."
+
 ### Recovery from Mistakes
 
 **If you get into a bad state, DO NOT thrash. Stop and recover:**
