@@ -294,6 +294,96 @@ const teamMembersRoutes = new Hono<{
     await db.delete(teamMembers).where(eq(teamMembers.id, memberId));
 
     return c.json({ success: true });
+  })
+  .post("/invite", async (c) => {
+    const user = c.get("user")!;
+    const teamId = c.get("teamId");
+    const teamRole = c.get("teamRole");
+
+    if (teamRole !== "admin" && teamRole !== "mentor") {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    const body = await c.req.json();
+    const role = (body.role as TeamRole) || "student";
+
+    if (!["admin", "mentor", "student"].includes(role)) {
+      return c.json({ error: "Invalid role" }, 400);
+    }
+
+    const token = crypto.randomUUID();
+    const inviteId = crypto.randomUUID();
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    try {
+      await db.insert(teamInvites).values({
+        id: inviteId,
+        teamId,
+        token,
+        role,
+        expiresAt,
+        createdBy: user.id,
+      });
+
+      return c.json({
+        token,
+        role,
+        expiresAt: expiresAt.toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to create invite:", error);
+      return c.json({ error: "Failed to create invite" }, 500);
+    }
+  })
+  .get("/invites", async (c) => {
+    const teamId = c.get("teamId");
+    const teamRole = c.get("teamRole");
+
+    if (teamRole !== "admin" && teamRole !== "mentor") {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    const invites = await db.query.teamInvites.findMany({
+      where: and(
+        eq(teamInvites.teamId, teamId),
+        sql`${teamInvites.usedAt} IS NULL`,
+        sql`${teamInvites.expiresAt} > ${new Date()}`
+      ),
+      with: { creator: true },
+    });
+
+    return c.json(
+      invites.map((i) => ({
+        id: i.id,
+        token: i.token,
+        role: i.role,
+        expiresAt: i.expiresAt.toISOString(),
+        createdBy: i.creator?.name || "Unknown",
+      }))
+    );
+  })
+  .delete("/invites/:inviteId", async (c) => {
+    const teamId = c.get("teamId");
+    const teamRole = c.get("teamRole");
+    const inviteId = c.req.param("inviteId");
+
+    if (teamRole !== "admin" && teamRole !== "mentor") {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    const invite = await db.query.teamInvites.findFirst({
+      where: eq(teamInvites.id, inviteId),
+    });
+
+    if (!invite || invite.teamId !== teamId) {
+      return c.json({ error: "Invite not found" }, 404);
+    }
+
+    await db.delete(teamInvites).where(eq(teamInvites.id, inviteId));
+
+    return c.json({ success: true });
   });
 
 // ============ Parts Routes ============
