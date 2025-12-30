@@ -161,11 +161,11 @@ Tell the user: "Bead complete and committed. Requesting compaction before next t
 
 #### Acceptable Verification Methods
 
-| Method                      | When to Use                           | Evidence Required                                      |
-| --------------------------- | ------------------------------------- | ------------------------------------------------------ |
-| **Unit tests passing**      | API routes, utilities, business logic | `bun test` output showing relevant tests pass          |
-| **Playwright verification** | UI components, pages, forms           | `browser_snapshot` or screenshot proving functionality |
-| **Both**                    | Full-stack features                   | Tests + Playwright                                     |
+| Method                      | When to Use                           | Evidence Required                                        |
+| --------------------------- | ------------------------------------- | -------------------------------------------------------- |
+| **Unit tests passing**      | API routes, utilities, business logic | `bun test` output showing relevant tests pass            |
+| **Chrome MCP verification** | UI components, pages, forms           | `read_page` snapshot or screenshot proving functionality |
+| **Both**                    | Full-stack features                   | Tests + Chrome MCP                                       |
 
 #### Verification Process
 
@@ -177,7 +177,7 @@ Tell the user: "Bead complete and committed. Requesting compaction before next t
 
 2. **After implementing**: Run verification and capture evidence:
    - For tests: Include test output in close reason
-   - For UI: Take Playwright snapshot/screenshot
+   - For UI: Take Chrome MCP snapshot/screenshot
 
 3. **When closing**: Include verification evidence in close reason:
    ```bash
@@ -228,7 +228,7 @@ bd create "Add pagination to parts list" -t task -d "Add pagination controls to 
 
 Verification:
 - Unit test: GET /api/teams/:id/parts?page=2&limit=10 returns correct slice
-- Playwright: Navigate to parts page, verify pagination controls visible and functional"
+- Chrome MCP: Navigate to parts page, verify pagination controls visible and functional"
 ```
 
 If you encounter a bead without verification criteria, add them before starting work.
@@ -364,13 +364,13 @@ describe("calculateOrderTotal", () => {
 - Drizzle ORM internals
 - Third-party API behavior
 
-## UI Validation with Playwright
+## UI Validation with Chrome MCP
 
-**All UI beads must be tested with Playwright before closing.**
+**All UI beads must be tested with Chrome MCP before closing.**
 
-The Playwright MCP server is available for browser automation. Use it to validate UI changes actually work in the browser.
+The Claude-in-Chrome MCP server provides browser automation via Chrome. Use it to validate UI changes actually work in the browser.
 
-### When to Use Playwright
+### When to Use Chrome MCP
 
 - Any bead that adds/modifies UI components
 - Form submissions and validation
@@ -378,54 +378,62 @@ The Playwright MCP server is available for browser automation. Use it to validat
 - React component interactions
 - Visual layout verification
 
-### Playwright Testing Checklist
+### Chrome MCP Testing Checklist
 
 Before closing a UI bead:
 
-1. Navigate to the affected page(s)
-2. Verify elements render correctly (`browser_snapshot`)
-3. Test interactive elements (clicks, form fills)
-4. Verify navigation works as expected
-5. Check for console errors (`browser_console_messages`)
+1. Get tab context first (`tabs_context_mcp`)
+2. Navigate to the affected page(s) (`navigate`)
+3. Verify elements render correctly (`read_page` or `computer` screenshot)
+4. Test interactive elements (clicks, form fills)
+5. Verify navigation works as expected
+6. Check for console errors (`read_console_messages`)
 
 ### Example Workflow
 
 ```
+# Get tab context first (required at session start)
+tabs_context_mcp -> get available tabs or create new one
+
 # Navigate to the page
-browser_navigate -> http://localhost:5173/teams/xxx/parts
+navigate -> http://localhost:5173/teams/xxx/parts
 
 # Take accessibility snapshot (better than screenshot for verification)
-browser_snapshot
+read_page -> get accessibility tree of current page
 
 # Test form interaction
-browser_click -> "Add Part" button
-browser_fill_form -> fill part details
-browser_click -> Submit
+find -> "Add Part" button
+computer(left_click) -> click the button
+form_input -> fill part details
+computer(left_click) -> Submit button
 
 # Verify success
-browser_snapshot -> confirm redirect/success message
+read_page -> confirm redirect/success message
 ```
 
 ### Authentication Note
 
-Playwright runs in its own browser context without your session cookies. For testing authenticated routes:
+Chrome MCP runs in your actual Chrome browser, so it can use your existing session cookies. For testing authenticated routes:
 
-- Public routes can be tested directly
-- Protected routes will redirect to login (this verifies auth middleware works)
-- For full authenticated testing, log in via the OAuth flow in the Playwright browser first
+- If already logged in, authenticated routes work directly
+- For fresh sessions, log in via the OAuth flow first
+- Use `tabs_context_mcp` at session start to see existing tabs
 
-### Playwright Tools Available
+### Chrome MCP Tools Available
 
-| Tool                       | Use For                            |
-| -------------------------- | ---------------------------------- |
-| `browser_navigate`         | Go to URL                          |
-| `browser_snapshot`         | Get accessibility tree (preferred) |
-| `browser_take_screenshot`  | Visual screenshot                  |
-| `browser_click`            | Click elements                     |
-| `browser_type`             | Type text                          |
-| `browser_fill_form`        | Fill multiple form fields          |
-| `browser_select_option`    | Select dropdown options            |
-| `browser_console_messages` | Check for JS errors                |
+| Tool                    | Use For                             |
+| ----------------------- | ----------------------------------- |
+| `tabs_context_mcp`      | Get tab context (REQUIRED first)    |
+| `tabs_create_mcp`       | Create new tab in MCP group         |
+| `navigate`              | Go to URL or back/forward           |
+| `read_page`             | Get accessibility tree (preferred)  |
+| `computer(screenshot)`  | Take visual screenshot              |
+| `computer(left_click)`  | Click elements by coordinate or ref |
+| `computer(type)`        | Type text                           |
+| `find`                  | Find elements by natural language   |
+| `form_input`            | Set form field values               |
+| `read_console_messages` | Check for JS errors                 |
+| `get_page_text`         | Extract raw text content from page  |
 
 ## Model Recommendations (Labels)
 
@@ -707,9 +715,9 @@ You are a bead-worker agent. Complete the bead [ID] autonomously.
 5. Implement the feature to make tests pass
 6. Verify with EVIDENCE:
    - For API/logic: `bun test` must pass, include output
-   - For UI: Use Playwright browser_snapshot to verify
+   - For UI: Use Chrome MCP read_page to verify
 7. Close ONLY with verification evidence:
-   `bd close [ID] -r "Summary. VERIFIED: [test output or Playwright evidence]"`
+   `bd close [ID] -r "Summary. VERIFIED: [test output or Chrome MCP evidence]"`
 
 VERIFICATION IS MANDATORY:
 - You CANNOT close a bead without clear evidence of completion
