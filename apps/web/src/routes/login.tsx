@@ -1,34 +1,112 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { signIn } from "@/lib/auth-client";
+
+type LoginSearch = {
+  redirect?: string;
+};
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
+  validateSearch: (search: Record<string, unknown>): LoginSearch => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
 });
 
 function LoginPage() {
+  const { redirect } = useSearch({ from: "/login" });
+  const [isLoading, setIsLoading] = useState<"github" | "google" | null>(null);
+
+  const handleOAuthSignIn = async (provider: "github" | "google") => {
+    setIsLoading(provider);
+    try {
+      await signIn.social({
+        provider,
+        callbackURL: redirect || "/dashboard",
+      });
+    } catch (error) {
+      console.error("Sign in error:", error);
+      setIsLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-display">Welcome to BuildSeason</CardTitle>
-          <CardDescription>Sign in to manage your team</CardDescription>
+          <CardTitle className="text-2xl font-display">
+            Sign in to BuildSeason
+          </CardTitle>
+          <CardDescription>
+            Manage your robotics team's parts, orders, and budget
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full" disabled>
-            <GitHubIcon className="mr-2 h-4 w-4" />
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => handleOAuthSignIn("github")}
+            disabled={isLoading !== null}
+          >
+            {isLoading === "github" ? (
+              <LoadingSpinner className="mr-2 h-4 w-4" />
+            ) : (
+              <GitHubIcon className="mr-2 h-4 w-4" />
+            )}
             Continue with GitHub
           </Button>
-          <Button variant="outline" className="w-full" disabled>
-            <GoogleIcon className="mr-2 h-4 w-4" />
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => handleOAuthSignIn("google")}
+            disabled={isLoading !== null}
+          >
+            {isLoading === "google" ? (
+              <LoadingSpinner className="mr-2 h-4 w-4" />
+            ) : (
+              <GoogleIcon className="mr-2 h-4 w-4" />
+            )}
             Continue with Google
           </Button>
           <p className="text-center text-xs text-muted-foreground pt-2">
-            New users are automatically registered on first login
+            New users are automatically registered on first sign in
           </p>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function LoadingSpinner({ className }: { className?: string }) {
+  return (
+    <svg
+      className={`animate-spin ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
   );
 }
 
