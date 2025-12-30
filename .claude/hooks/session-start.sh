@@ -8,13 +8,25 @@ echo "🔗 Setting up bd (beads issue tracker)..."
 
 BD_INSTALLED=false
 
-# Check if bd is already installed
+# Check if bd is already installed globally
 if command -v bd &> /dev/null && bd version &> /dev/null 2>&1; then
     echo "✓ bd already installed: $(bd version 2>/dev/null || echo 'unknown')"
     BD_INSTALLED=true
 fi
 
-# Try npm install if not installed
+# Option 1: Use vendored binary (committed to repo for Claude Code Web)
+if [ "$BD_INSTALLED" = false ]; then
+    VENDORED_BD="$CLAUDE_PROJECT_DIR/.beads/bin/bd"
+    if [ -x "$VENDORED_BD" ]; then
+        export PATH="$CLAUDE_PROJECT_DIR/.beads/bin:$PATH"
+        if bd version &> /dev/null 2>&1; then
+            echo "✓ Using vendored bd: $(bd version 2>/dev/null || echo 'unknown')"
+            BD_INSTALLED=true
+        fi
+    fi
+fi
+
+# Option 2: Try npm install
 if [ "$BD_INSTALLED" = false ]; then
     echo "Installing @beads/bd via npm..."
     if npm install -g @beads/bd 2>/dev/null; then
@@ -25,7 +37,7 @@ if [ "$BD_INSTALLED" = false ]; then
     fi
 fi
 
-# Fallback: Use bd-shim.js for Claude Code Web environments
+# Option 3: Fallback to bd-shim.js (pure JS implementation)
 if [ "$BD_INSTALLED" = false ]; then
     SHIM_PATH="$CLAUDE_PROJECT_DIR/.claude/hooks/bd-shim.js"
     if [ -f "$SHIM_PATH" ]; then
@@ -52,12 +64,8 @@ if [ ! -d .beads ]; then
 else
     echo ""
     echo "Ready work:"
-    if command -v bd &> /dev/null; then
-        bd ready --limit 5 2>/dev/null || node "$CLAUDE_PROJECT_DIR/.claude/hooks/bd-shim.js" ready --limit 5 2>/dev/null || echo "  (unable to list ready work)"
-    else
-        node "$CLAUDE_PROJECT_DIR/.claude/hooks/bd-shim.js" ready --limit 5 2>/dev/null || echo "  (unable to list ready work)"
-    fi
+    bd ready --limit 5 2>/dev/null || echo "  (unable to list ready work)"
 fi
 
 echo ""
-echo "✓ Beads ready! Use 'bd ready' or 'node .claude/hooks/bd-shim.js ready' for tasks."
+echo "✓ Beads ready! Use 'bd ready' to see available tasks."
