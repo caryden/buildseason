@@ -33,3 +33,6 @@ drizzle/meta/
 
 # Bun
 bun.lockb
+
+# Playwright MCP screenshots
+.playwright-mcp/

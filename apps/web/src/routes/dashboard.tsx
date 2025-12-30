@@ -39,6 +39,7 @@ function DashboardPage() {
       return handleResponse<
         Array<{
           id: string;
+          program: string;
           name: string;
           number: string;
           season: string;
@@ -55,7 +56,7 @@ function DashboardPage() {
   });
 
   return (
-    <AppLayout user={user}>
+    <AppLayout user={user} teams={teams}>
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -98,8 +99,8 @@ function DashboardPage() {
             teams?.map((team) => (
               <Link
                 key={team.id}
-                to="/teams/$teamId"
-                params={{ teamId: team.id }}
+                to="/team/$program/$number"
+                params={{ program: team.program, number: team.number }}
               >
                 <Card className="cursor-pointer hover:border-primary transition-colors">
                   <CardHeader>
