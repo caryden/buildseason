@@ -26,6 +26,7 @@ import { Route as TeamProgramNumberOrdersIndexRouteImport } from "./routes/team/
 import { Route as TeamProgramNumberMembersIndexRouteImport } from "./routes/team/$program/$number/members/index";
 import { Route as TeamProgramNumberPartsNewIndexRouteImport } from "./routes/team/$program/$number/parts/new/index";
 import { Route as TeamProgramNumberPartsPartIdIndexRouteImport } from "./routes/team/$program/$number/parts/$partId/index";
+import { Route as TeamProgramNumberOrdersNewIndexRouteImport } from "./routes/team/$program/$number/orders/new/index";
 import { Route as TeamProgramNumberOrdersOrderIdIndexRouteImport } from "./routes/team/$program/$number/orders/$orderId/index";
 import { Route as TeamProgramNumberPartsPartIdEditIndexRouteImport } from "./routes/team/$program/$number/parts/$partId/edit/index";
 
@@ -121,6 +122,12 @@ const TeamProgramNumberPartsPartIdIndexRoute =
     path: "/parts/$partId/",
     getParentRoute: () => TeamProgramNumberRoute,
   } as any);
+const TeamProgramNumberOrdersNewIndexRoute =
+  TeamProgramNumberOrdersNewIndexRouteImport.update({
+    id: "/orders/new/",
+    path: "/orders/new/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
 const TeamProgramNumberOrdersOrderIdIndexRoute =
   TeamProgramNumberOrdersOrderIdIndexRouteImport.update({
     id: "/orders/$orderId/",
@@ -151,6 +158,7 @@ export interface FileRoutesByFullPath {
   "/team/$program/$number/robots": typeof TeamProgramNumberRobotsIndexRoute;
   "/team/$program/$number/settings": typeof TeamProgramNumberSettingsIndexRoute;
   "/team/$program/$number/orders/$orderId": typeof TeamProgramNumberOrdersOrderIdIndexRoute;
+  "/team/$program/$number/orders/new": typeof TeamProgramNumberOrdersNewIndexRoute;
   "/team/$program/$number/parts/$partId": typeof TeamProgramNumberPartsPartIdIndexRoute;
   "/team/$program/$number/parts/new": typeof TeamProgramNumberPartsNewIndexRoute;
   "/team/$program/$number/parts/$partId/edit": typeof TeamProgramNumberPartsPartIdEditIndexRoute;
@@ -171,6 +179,7 @@ export interface FileRoutesByTo {
   "/team/$program/$number/robots": typeof TeamProgramNumberRobotsIndexRoute;
   "/team/$program/$number/settings": typeof TeamProgramNumberSettingsIndexRoute;
   "/team/$program/$number/orders/$orderId": typeof TeamProgramNumberOrdersOrderIdIndexRoute;
+  "/team/$program/$number/orders/new": typeof TeamProgramNumberOrdersNewIndexRoute;
   "/team/$program/$number/parts/$partId": typeof TeamProgramNumberPartsPartIdIndexRoute;
   "/team/$program/$number/parts/new": typeof TeamProgramNumberPartsNewIndexRoute;
   "/team/$program/$number/parts/$partId/edit": typeof TeamProgramNumberPartsPartIdEditIndexRoute;
@@ -193,6 +202,7 @@ export interface FileRoutesById {
   "/team/$program/$number/robots/": typeof TeamProgramNumberRobotsIndexRoute;
   "/team/$program/$number/settings/": typeof TeamProgramNumberSettingsIndexRoute;
   "/team/$program/$number/orders/$orderId/": typeof TeamProgramNumberOrdersOrderIdIndexRoute;
+  "/team/$program/$number/orders/new/": typeof TeamProgramNumberOrdersNewIndexRoute;
   "/team/$program/$number/parts/$partId/": typeof TeamProgramNumberPartsPartIdIndexRoute;
   "/team/$program/$number/parts/new/": typeof TeamProgramNumberPartsNewIndexRoute;
   "/team/$program/$number/parts/$partId/edit/": typeof TeamProgramNumberPartsPartIdEditIndexRoute;
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | "/team/$program/$number/robots"
     | "/team/$program/$number/settings"
     | "/team/$program/$number/orders/$orderId"
+    | "/team/$program/$number/orders/new"
     | "/team/$program/$number/parts/$partId"
     | "/team/$program/$number/parts/new"
     | "/team/$program/$number/parts/$partId/edit";
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | "/team/$program/$number/robots"
     | "/team/$program/$number/settings"
     | "/team/$program/$number/orders/$orderId"
+    | "/team/$program/$number/orders/new"
     | "/team/$program/$number/parts/$partId"
     | "/team/$program/$number/parts/new"
     | "/team/$program/$number/parts/$partId/edit";
@@ -257,6 +269,7 @@ export interface FileRouteTypes {
     | "/team/$program/$number/robots/"
     | "/team/$program/$number/settings/"
     | "/team/$program/$number/orders/$orderId/"
+    | "/team/$program/$number/orders/new/"
     | "/team/$program/$number/parts/$partId/"
     | "/team/$program/$number/parts/new/"
     | "/team/$program/$number/parts/$partId/edit/";
@@ -395,6 +408,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof TeamProgramNumberPartsPartIdIndexRouteImport;
       parentRoute: typeof TeamProgramNumberRoute;
     };
+    "/team/$program/$number/orders/new/": {
+      id: "/team/$program/$number/orders/new/";
+      path: "/orders/new";
+      fullPath: "/team/$program/$number/orders/new";
+      preLoaderRoute: typeof TeamProgramNumberOrdersNewIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
     "/team/$program/$number/orders/$orderId/": {
       id: "/team/$program/$number/orders/$orderId/";
       path: "/orders/$orderId";
@@ -420,6 +440,7 @@ interface TeamProgramNumberRouteChildren {
   TeamProgramNumberRobotsIndexRoute: typeof TeamProgramNumberRobotsIndexRoute;
   TeamProgramNumberSettingsIndexRoute: typeof TeamProgramNumberSettingsIndexRoute;
   TeamProgramNumberOrdersOrderIdIndexRoute: typeof TeamProgramNumberOrdersOrderIdIndexRoute;
+  TeamProgramNumberOrdersNewIndexRoute: typeof TeamProgramNumberOrdersNewIndexRoute;
   TeamProgramNumberPartsPartIdIndexRoute: typeof TeamProgramNumberPartsPartIdIndexRoute;
   TeamProgramNumberPartsNewIndexRoute: typeof TeamProgramNumberPartsNewIndexRoute;
   TeamProgramNumberPartsPartIdEditIndexRoute: typeof TeamProgramNumberPartsPartIdEditIndexRoute;
@@ -434,6 +455,7 @@ const TeamProgramNumberRouteChildren: TeamProgramNumberRouteChildren = {
   TeamProgramNumberSettingsIndexRoute: TeamProgramNumberSettingsIndexRoute,
   TeamProgramNumberOrdersOrderIdIndexRoute:
     TeamProgramNumberOrdersOrderIdIndexRoute,
+  TeamProgramNumberOrdersNewIndexRoute: TeamProgramNumberOrdersNewIndexRoute,
   TeamProgramNumberPartsPartIdIndexRoute:
     TeamProgramNumberPartsPartIdIndexRoute,
   TeamProgramNumberPartsNewIndexRoute: TeamProgramNumberPartsNewIndexRoute,

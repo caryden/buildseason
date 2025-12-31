@@ -307,7 +307,10 @@ function OrdersPage() {
           </p>
         </div>
         <Button asChild>
-          <Link to="/team/$program/$number/orders" params={{ program, number }}>
+          <Link
+            to="/team/$program/$number/orders/new"
+            params={{ program, number }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             New Order
           </Link>
@@ -361,7 +364,7 @@ function OrdersPage() {
             {!searchParams.status && (
               <Button asChild>
                 <Link
-                  to="/team/$program/$number/orders"
+                  to="/team/$program/$number/orders/new"
                   params={{ program, number }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
