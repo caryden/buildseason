@@ -4,6 +4,14 @@ import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -12,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge, type OrderStatus } from "@/components/ui/status-badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Plus,
   ShoppingCart,
@@ -67,6 +76,9 @@ function OrdersPage() {
     inProgress: true,
     completed: false,
   });
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectingOrderId, setRejectingOrderId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   // Get team info from teams list
   const { data: teams } = useQuery({
@@ -129,11 +141,17 @@ function OrdersPage() {
 
   // Reject mutation
   const rejectMutation = useMutation({
-    mutationFn: async (orderId: string) => {
+    mutationFn: async ({
+      orderId,
+      reason,
+    }: {
+      orderId: string;
+      reason: string;
+    }) => {
       const res = await fetch(`/api/teams/${teamId}/orders/${orderId}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ reason }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -146,11 +164,29 @@ function OrdersPage() {
         queryKey: queryKeys.orders.list(teamId || ""),
       });
       toast.success("Order rejected");
+      setRejectDialogOpen(false);
+      setRejectingOrderId(null);
+      setRejectionReason("");
     },
     onError: (err: Error) => {
       toast.error(err.message);
     },
   });
+
+  const handleRejectClick = (orderId: string) => {
+    setRejectingOrderId(orderId);
+    setRejectionReason("");
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectConfirm = () => {
+    if (rejectingOrderId) {
+      rejectMutation.mutate({
+        orderId: rejectingOrderId,
+        reason: rejectionReason,
+      });
+    }
+  };
 
   // Group orders by status category
   const pendingOrders = orders?.filter((o) => o.status === "pending") || [];
@@ -228,7 +264,7 @@ function OrdersPage() {
                 size="sm"
                 variant="outline"
                 className="text-red-600 border-red-600 hover:bg-red-50"
-                onClick={() => rejectMutation.mutate(order.id)}
+                onClick={() => handleRejectClick(order.id)}
                 disabled={rejectMutation.isPending}
               >
                 <XCircle className="h-4 w-4 mr-1" />
@@ -255,6 +291,7 @@ function OrdersPage() {
     defaultExpanded?: boolean;
   }) => {
     const isExpanded = expandedSections[sectionKey] ?? defaultExpanded;
+    const sectionId = `orders-section-${sectionKey}`;
 
     if (sectionOrders.length === 0) return null;
 
@@ -263,6 +300,8 @@ function OrdersPage() {
         <button
           onClick={() => toggleSection(sectionKey)}
           className="flex items-center gap-2 text-lg font-semibold hover:text-primary transition-colors"
+          aria-expanded={isExpanded}
+          aria-controls={sectionId}
         >
           {isExpanded ? (
             <ChevronDown className="h-5 w-5" />
@@ -275,7 +314,7 @@ function OrdersPage() {
           </span>
         </button>
         {isExpanded && (
-          <div className="space-y-3 pl-7">
+          <div id={sectionId} className="space-y-3 pl-7">
             {sectionOrders.map((order) => (
               <OrderCard key={order.id} order={order} />
             ))}
@@ -410,6 +449,43 @@ function OrdersPage() {
           />
         </div>
       )}
+
+      {/* Rejection Reason Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Order</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for rejecting this order. This will be
+              visible to the order creator.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              placeholder="Enter rejection reason..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRejectDialogOpen(false)}
+              disabled={rejectMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRejectConfirm}
+              disabled={rejectMutation.isPending || !rejectionReason.trim()}
+            >
+              {rejectMutation.isPending ? "Rejecting..." : "Reject Order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
