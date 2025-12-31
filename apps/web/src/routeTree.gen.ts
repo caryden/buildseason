@@ -19,11 +19,20 @@ import { Route as TeamsNewRouteImport } from "./routes/teams/new";
 import { Route as TeamsJoinRouteImport } from "./routes/teams/join";
 import { Route as TeamProgramNumberRouteImport } from "./routes/team/$program/$number";
 import { Route as TeamProgramNumberIndexRouteImport } from "./routes/team/$program/$number/index";
+import { Route as TeamProgramNumberVendorsIndexRouteImport } from "./routes/team/$program/$number/vendors/index";
+import { Route as TeamProgramNumberSponsorsIndexRouteImport } from "./routes/team/$program/$number/sponsors/index";
+import { Route as TeamProgramNumberSoftwareIndexRouteImport } from "./routes/team/$program/$number/software/index";
 import { Route as TeamProgramNumberSettingsIndexRouteImport } from "./routes/team/$program/$number/settings/index";
 import { Route as TeamProgramNumberRobotsIndexRouteImport } from "./routes/team/$program/$number/robots/index";
 import { Route as TeamProgramNumberPartsIndexRouteImport } from "./routes/team/$program/$number/parts/index";
+import { Route as TeamProgramNumberOutreachIndexRouteImport } from "./routes/team/$program/$number/outreach/index";
 import { Route as TeamProgramNumberOrdersIndexRouteImport } from "./routes/team/$program/$number/orders/index";
+import { Route as TeamProgramNumberOperationsIndexRouteImport } from "./routes/team/$program/$number/operations/index";
 import { Route as TeamProgramNumberMembersIndexRouteImport } from "./routes/team/$program/$number/members/index";
+import { Route as TeamProgramNumberMarketingIndexRouteImport } from "./routes/team/$program/$number/marketing/index";
+import { Route as TeamProgramNumberFinanceIndexRouteImport } from "./routes/team/$program/$number/finance/index";
+import { Route as TeamProgramNumberFabricationIndexRouteImport } from "./routes/team/$program/$number/fabrication/index";
+import { Route as TeamProgramNumberCalendarIndexRouteImport } from "./routes/team/$program/$number/calendar/index";
 import { Route as TeamProgramNumberSettingsSeasonsRouteImport } from "./routes/team/$program/$number/settings/seasons";
 import { Route as TeamProgramNumberVendorsVendorIdIndexRouteImport } from "./routes/team/$program/$number/vendors/$vendorId/index";
 import { Route as TeamProgramNumberRobotsNewIndexRouteImport } from "./routes/team/$program/$number/robots/new/index";
@@ -86,6 +95,24 @@ const TeamProgramNumberIndexRoute = TeamProgramNumberIndexRouteImport.update({
   path: "/",
   getParentRoute: () => TeamProgramNumberRoute,
 } as any);
+const TeamProgramNumberVendorsIndexRoute =
+  TeamProgramNumberVendorsIndexRouteImport.update({
+    id: "/vendors/",
+    path: "/vendors/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
+const TeamProgramNumberSponsorsIndexRoute =
+  TeamProgramNumberSponsorsIndexRouteImport.update({
+    id: "/sponsors/",
+    path: "/sponsors/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
+const TeamProgramNumberSoftwareIndexRoute =
+  TeamProgramNumberSoftwareIndexRouteImport.update({
+    id: "/software/",
+    path: "/software/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
 const TeamProgramNumberSettingsIndexRoute =
   TeamProgramNumberSettingsIndexRouteImport.update({
     id: "/settings/",
@@ -104,16 +131,52 @@ const TeamProgramNumberPartsIndexRoute =
     path: "/parts/",
     getParentRoute: () => TeamProgramNumberRoute,
   } as any);
+const TeamProgramNumberOutreachIndexRoute =
+  TeamProgramNumberOutreachIndexRouteImport.update({
+    id: "/outreach/",
+    path: "/outreach/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
 const TeamProgramNumberOrdersIndexRoute =
   TeamProgramNumberOrdersIndexRouteImport.update({
     id: "/orders/",
     path: "/orders/",
     getParentRoute: () => TeamProgramNumberRoute,
   } as any);
+const TeamProgramNumberOperationsIndexRoute =
+  TeamProgramNumberOperationsIndexRouteImport.update({
+    id: "/operations/",
+    path: "/operations/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
 const TeamProgramNumberMembersIndexRoute =
   TeamProgramNumberMembersIndexRouteImport.update({
     id: "/members/",
     path: "/members/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
+const TeamProgramNumberMarketingIndexRoute =
+  TeamProgramNumberMarketingIndexRouteImport.update({
+    id: "/marketing/",
+    path: "/marketing/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
+const TeamProgramNumberFinanceIndexRoute =
+  TeamProgramNumberFinanceIndexRouteImport.update({
+    id: "/finance/",
+    path: "/finance/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
+const TeamProgramNumberFabricationIndexRoute =
+  TeamProgramNumberFabricationIndexRouteImport.update({
+    id: "/fabrication/",
+    path: "/fabrication/",
+    getParentRoute: () => TeamProgramNumberRoute,
+  } as any);
+const TeamProgramNumberCalendarIndexRoute =
+  TeamProgramNumberCalendarIndexRouteImport.update({
+    id: "/calendar/",
+    path: "/calendar/",
     getParentRoute: () => TeamProgramNumberRoute,
   } as any);
 const TeamProgramNumberSettingsSeasonsRoute =
@@ -195,11 +258,20 @@ export interface FileRoutesByFullPath {
   "/team/$program/$number": typeof TeamProgramNumberRouteWithChildren;
   "/team/$program/$number/": typeof TeamProgramNumberIndexRoute;
   "/team/$program/$number/settings/seasons": typeof TeamProgramNumberSettingsSeasonsRoute;
+  "/team/$program/$number/calendar": typeof TeamProgramNumberCalendarIndexRoute;
+  "/team/$program/$number/fabrication": typeof TeamProgramNumberFabricationIndexRoute;
+  "/team/$program/$number/finance": typeof TeamProgramNumberFinanceIndexRoute;
+  "/team/$program/$number/marketing": typeof TeamProgramNumberMarketingIndexRoute;
   "/team/$program/$number/members": typeof TeamProgramNumberMembersIndexRoute;
+  "/team/$program/$number/operations": typeof TeamProgramNumberOperationsIndexRoute;
   "/team/$program/$number/orders": typeof TeamProgramNumberOrdersIndexRoute;
+  "/team/$program/$number/outreach": typeof TeamProgramNumberOutreachIndexRoute;
   "/team/$program/$number/parts": typeof TeamProgramNumberPartsIndexRoute;
   "/team/$program/$number/robots": typeof TeamProgramNumberRobotsIndexRoute;
   "/team/$program/$number/settings": typeof TeamProgramNumberSettingsIndexRoute;
+  "/team/$program/$number/software": typeof TeamProgramNumberSoftwareIndexRoute;
+  "/team/$program/$number/sponsors": typeof TeamProgramNumberSponsorsIndexRoute;
+  "/team/$program/$number/vendors": typeof TeamProgramNumberVendorsIndexRoute;
   "/team/$program/$number/orders/$orderId": typeof TeamProgramNumberOrdersOrderIdIndexRoute;
   "/team/$program/$number/orders/new": typeof TeamProgramNumberOrdersNewIndexRoute;
   "/team/$program/$number/parts/$partId": typeof TeamProgramNumberPartsPartIdIndexRoute;
@@ -222,11 +294,20 @@ export interface FileRoutesByTo {
   "/teams": typeof TeamsIndexRoute;
   "/team/$program/$number": typeof TeamProgramNumberIndexRoute;
   "/team/$program/$number/settings/seasons": typeof TeamProgramNumberSettingsSeasonsRoute;
+  "/team/$program/$number/calendar": typeof TeamProgramNumberCalendarIndexRoute;
+  "/team/$program/$number/fabrication": typeof TeamProgramNumberFabricationIndexRoute;
+  "/team/$program/$number/finance": typeof TeamProgramNumberFinanceIndexRoute;
+  "/team/$program/$number/marketing": typeof TeamProgramNumberMarketingIndexRoute;
   "/team/$program/$number/members": typeof TeamProgramNumberMembersIndexRoute;
+  "/team/$program/$number/operations": typeof TeamProgramNumberOperationsIndexRoute;
   "/team/$program/$number/orders": typeof TeamProgramNumberOrdersIndexRoute;
+  "/team/$program/$number/outreach": typeof TeamProgramNumberOutreachIndexRoute;
   "/team/$program/$number/parts": typeof TeamProgramNumberPartsIndexRoute;
   "/team/$program/$number/robots": typeof TeamProgramNumberRobotsIndexRoute;
   "/team/$program/$number/settings": typeof TeamProgramNumberSettingsIndexRoute;
+  "/team/$program/$number/software": typeof TeamProgramNumberSoftwareIndexRoute;
+  "/team/$program/$number/sponsors": typeof TeamProgramNumberSponsorsIndexRoute;
+  "/team/$program/$number/vendors": typeof TeamProgramNumberVendorsIndexRoute;
   "/team/$program/$number/orders/$orderId": typeof TeamProgramNumberOrdersOrderIdIndexRoute;
   "/team/$program/$number/orders/new": typeof TeamProgramNumberOrdersNewIndexRoute;
   "/team/$program/$number/parts/$partId": typeof TeamProgramNumberPartsPartIdIndexRoute;
@@ -251,11 +332,20 @@ export interface FileRoutesById {
   "/team/$program/$number": typeof TeamProgramNumberRouteWithChildren;
   "/team/$program/$number/": typeof TeamProgramNumberIndexRoute;
   "/team/$program/$number/settings/seasons": typeof TeamProgramNumberSettingsSeasonsRoute;
+  "/team/$program/$number/calendar/": typeof TeamProgramNumberCalendarIndexRoute;
+  "/team/$program/$number/fabrication/": typeof TeamProgramNumberFabricationIndexRoute;
+  "/team/$program/$number/finance/": typeof TeamProgramNumberFinanceIndexRoute;
+  "/team/$program/$number/marketing/": typeof TeamProgramNumberMarketingIndexRoute;
   "/team/$program/$number/members/": typeof TeamProgramNumberMembersIndexRoute;
+  "/team/$program/$number/operations/": typeof TeamProgramNumberOperationsIndexRoute;
   "/team/$program/$number/orders/": typeof TeamProgramNumberOrdersIndexRoute;
+  "/team/$program/$number/outreach/": typeof TeamProgramNumberOutreachIndexRoute;
   "/team/$program/$number/parts/": typeof TeamProgramNumberPartsIndexRoute;
   "/team/$program/$number/robots/": typeof TeamProgramNumberRobotsIndexRoute;
   "/team/$program/$number/settings/": typeof TeamProgramNumberSettingsIndexRoute;
+  "/team/$program/$number/software/": typeof TeamProgramNumberSoftwareIndexRoute;
+  "/team/$program/$number/sponsors/": typeof TeamProgramNumberSponsorsIndexRoute;
+  "/team/$program/$number/vendors/": typeof TeamProgramNumberVendorsIndexRoute;
   "/team/$program/$number/orders/$orderId/": typeof TeamProgramNumberOrdersOrderIdIndexRoute;
   "/team/$program/$number/orders/new/": typeof TeamProgramNumberOrdersNewIndexRoute;
   "/team/$program/$number/parts/$partId/": typeof TeamProgramNumberPartsPartIdIndexRoute;
@@ -281,11 +371,20 @@ export interface FileRouteTypes {
     | "/team/$program/$number"
     | "/team/$program/$number/"
     | "/team/$program/$number/settings/seasons"
+    | "/team/$program/$number/calendar"
+    | "/team/$program/$number/fabrication"
+    | "/team/$program/$number/finance"
+    | "/team/$program/$number/marketing"
     | "/team/$program/$number/members"
+    | "/team/$program/$number/operations"
     | "/team/$program/$number/orders"
+    | "/team/$program/$number/outreach"
     | "/team/$program/$number/parts"
     | "/team/$program/$number/robots"
     | "/team/$program/$number/settings"
+    | "/team/$program/$number/software"
+    | "/team/$program/$number/sponsors"
+    | "/team/$program/$number/vendors"
     | "/team/$program/$number/orders/$orderId"
     | "/team/$program/$number/orders/new"
     | "/team/$program/$number/parts/$partId"
@@ -308,11 +407,20 @@ export interface FileRouteTypes {
     | "/teams"
     | "/team/$program/$number"
     | "/team/$program/$number/settings/seasons"
+    | "/team/$program/$number/calendar"
+    | "/team/$program/$number/fabrication"
+    | "/team/$program/$number/finance"
+    | "/team/$program/$number/marketing"
     | "/team/$program/$number/members"
+    | "/team/$program/$number/operations"
     | "/team/$program/$number/orders"
+    | "/team/$program/$number/outreach"
     | "/team/$program/$number/parts"
     | "/team/$program/$number/robots"
     | "/team/$program/$number/settings"
+    | "/team/$program/$number/software"
+    | "/team/$program/$number/sponsors"
+    | "/team/$program/$number/vendors"
     | "/team/$program/$number/orders/$orderId"
     | "/team/$program/$number/orders/new"
     | "/team/$program/$number/parts/$partId"
@@ -336,11 +444,20 @@ export interface FileRouteTypes {
     | "/team/$program/$number"
     | "/team/$program/$number/"
     | "/team/$program/$number/settings/seasons"
+    | "/team/$program/$number/calendar/"
+    | "/team/$program/$number/fabrication/"
+    | "/team/$program/$number/finance/"
+    | "/team/$program/$number/marketing/"
     | "/team/$program/$number/members/"
+    | "/team/$program/$number/operations/"
     | "/team/$program/$number/orders/"
+    | "/team/$program/$number/outreach/"
     | "/team/$program/$number/parts/"
     | "/team/$program/$number/robots/"
     | "/team/$program/$number/settings/"
+    | "/team/$program/$number/software/"
+    | "/team/$program/$number/sponsors/"
+    | "/team/$program/$number/vendors/"
     | "/team/$program/$number/orders/$orderId/"
     | "/team/$program/$number/orders/new/"
     | "/team/$program/$number/parts/$partId/"
@@ -437,6 +554,27 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof TeamProgramNumberIndexRouteImport;
       parentRoute: typeof TeamProgramNumberRoute;
     };
+    "/team/$program/$number/vendors/": {
+      id: "/team/$program/$number/vendors/";
+      path: "/vendors";
+      fullPath: "/team/$program/$number/vendors";
+      preLoaderRoute: typeof TeamProgramNumberVendorsIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
+    "/team/$program/$number/sponsors/": {
+      id: "/team/$program/$number/sponsors/";
+      path: "/sponsors";
+      fullPath: "/team/$program/$number/sponsors";
+      preLoaderRoute: typeof TeamProgramNumberSponsorsIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
+    "/team/$program/$number/software/": {
+      id: "/team/$program/$number/software/";
+      path: "/software";
+      fullPath: "/team/$program/$number/software";
+      preLoaderRoute: typeof TeamProgramNumberSoftwareIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
     "/team/$program/$number/settings/": {
       id: "/team/$program/$number/settings/";
       path: "/settings";
@@ -458,6 +596,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof TeamProgramNumberPartsIndexRouteImport;
       parentRoute: typeof TeamProgramNumberRoute;
     };
+    "/team/$program/$number/outreach/": {
+      id: "/team/$program/$number/outreach/";
+      path: "/outreach";
+      fullPath: "/team/$program/$number/outreach";
+      preLoaderRoute: typeof TeamProgramNumberOutreachIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
     "/team/$program/$number/orders/": {
       id: "/team/$program/$number/orders/";
       path: "/orders";
@@ -465,11 +610,46 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof TeamProgramNumberOrdersIndexRouteImport;
       parentRoute: typeof TeamProgramNumberRoute;
     };
+    "/team/$program/$number/operations/": {
+      id: "/team/$program/$number/operations/";
+      path: "/operations";
+      fullPath: "/team/$program/$number/operations";
+      preLoaderRoute: typeof TeamProgramNumberOperationsIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
     "/team/$program/$number/members/": {
       id: "/team/$program/$number/members/";
       path: "/members";
       fullPath: "/team/$program/$number/members";
       preLoaderRoute: typeof TeamProgramNumberMembersIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
+    "/team/$program/$number/marketing/": {
+      id: "/team/$program/$number/marketing/";
+      path: "/marketing";
+      fullPath: "/team/$program/$number/marketing";
+      preLoaderRoute: typeof TeamProgramNumberMarketingIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
+    "/team/$program/$number/finance/": {
+      id: "/team/$program/$number/finance/";
+      path: "/finance";
+      fullPath: "/team/$program/$number/finance";
+      preLoaderRoute: typeof TeamProgramNumberFinanceIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
+    "/team/$program/$number/fabrication/": {
+      id: "/team/$program/$number/fabrication/";
+      path: "/fabrication";
+      fullPath: "/team/$program/$number/fabrication";
+      preLoaderRoute: typeof TeamProgramNumberFabricationIndexRouteImport;
+      parentRoute: typeof TeamProgramNumberRoute;
+    };
+    "/team/$program/$number/calendar/": {
+      id: "/team/$program/$number/calendar/";
+      path: "/calendar";
+      fullPath: "/team/$program/$number/calendar";
+      preLoaderRoute: typeof TeamProgramNumberCalendarIndexRouteImport;
       parentRoute: typeof TeamProgramNumberRoute;
     };
     "/team/$program/$number/settings/seasons": {
@@ -555,11 +735,20 @@ declare module "@tanstack/react-router" {
 interface TeamProgramNumberRouteChildren {
   TeamProgramNumberIndexRoute: typeof TeamProgramNumberIndexRoute;
   TeamProgramNumberSettingsSeasonsRoute: typeof TeamProgramNumberSettingsSeasonsRoute;
+  TeamProgramNumberCalendarIndexRoute: typeof TeamProgramNumberCalendarIndexRoute;
+  TeamProgramNumberFabricationIndexRoute: typeof TeamProgramNumberFabricationIndexRoute;
+  TeamProgramNumberFinanceIndexRoute: typeof TeamProgramNumberFinanceIndexRoute;
+  TeamProgramNumberMarketingIndexRoute: typeof TeamProgramNumberMarketingIndexRoute;
   TeamProgramNumberMembersIndexRoute: typeof TeamProgramNumberMembersIndexRoute;
+  TeamProgramNumberOperationsIndexRoute: typeof TeamProgramNumberOperationsIndexRoute;
   TeamProgramNumberOrdersIndexRoute: typeof TeamProgramNumberOrdersIndexRoute;
+  TeamProgramNumberOutreachIndexRoute: typeof TeamProgramNumberOutreachIndexRoute;
   TeamProgramNumberPartsIndexRoute: typeof TeamProgramNumberPartsIndexRoute;
   TeamProgramNumberRobotsIndexRoute: typeof TeamProgramNumberRobotsIndexRoute;
   TeamProgramNumberSettingsIndexRoute: typeof TeamProgramNumberSettingsIndexRoute;
+  TeamProgramNumberSoftwareIndexRoute: typeof TeamProgramNumberSoftwareIndexRoute;
+  TeamProgramNumberSponsorsIndexRoute: typeof TeamProgramNumberSponsorsIndexRoute;
+  TeamProgramNumberVendorsIndexRoute: typeof TeamProgramNumberVendorsIndexRoute;
   TeamProgramNumberOrdersOrderIdIndexRoute: typeof TeamProgramNumberOrdersOrderIdIndexRoute;
   TeamProgramNumberOrdersNewIndexRoute: typeof TeamProgramNumberOrdersNewIndexRoute;
   TeamProgramNumberPartsPartIdIndexRoute: typeof TeamProgramNumberPartsPartIdIndexRoute;
@@ -575,11 +764,21 @@ interface TeamProgramNumberRouteChildren {
 const TeamProgramNumberRouteChildren: TeamProgramNumberRouteChildren = {
   TeamProgramNumberIndexRoute: TeamProgramNumberIndexRoute,
   TeamProgramNumberSettingsSeasonsRoute: TeamProgramNumberSettingsSeasonsRoute,
+  TeamProgramNumberCalendarIndexRoute: TeamProgramNumberCalendarIndexRoute,
+  TeamProgramNumberFabricationIndexRoute:
+    TeamProgramNumberFabricationIndexRoute,
+  TeamProgramNumberFinanceIndexRoute: TeamProgramNumberFinanceIndexRoute,
+  TeamProgramNumberMarketingIndexRoute: TeamProgramNumberMarketingIndexRoute,
   TeamProgramNumberMembersIndexRoute: TeamProgramNumberMembersIndexRoute,
+  TeamProgramNumberOperationsIndexRoute: TeamProgramNumberOperationsIndexRoute,
   TeamProgramNumberOrdersIndexRoute: TeamProgramNumberOrdersIndexRoute,
+  TeamProgramNumberOutreachIndexRoute: TeamProgramNumberOutreachIndexRoute,
   TeamProgramNumberPartsIndexRoute: TeamProgramNumberPartsIndexRoute,
   TeamProgramNumberRobotsIndexRoute: TeamProgramNumberRobotsIndexRoute,
   TeamProgramNumberSettingsIndexRoute: TeamProgramNumberSettingsIndexRoute,
+  TeamProgramNumberSoftwareIndexRoute: TeamProgramNumberSoftwareIndexRoute,
+  TeamProgramNumberSponsorsIndexRoute: TeamProgramNumberSponsorsIndexRoute,
+  TeamProgramNumberVendorsIndexRoute: TeamProgramNumberVendorsIndexRoute,
   TeamProgramNumberOrdersOrderIdIndexRoute:
     TeamProgramNumberOrdersOrderIdIndexRoute,
   TeamProgramNumberOrdersNewIndexRoute: TeamProgramNumberOrdersNewIndexRoute,

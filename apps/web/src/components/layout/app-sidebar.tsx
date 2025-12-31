@@ -1,14 +1,22 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Home,
+  Calendar,
   Package,
   Bot,
+  Code,
+  Printer,
   ShoppingCart,
   Store,
   Users,
   Settings,
   ChevronUp,
   LogOut,
+  Heart,
+  Handshake,
+  Megaphone,
+  Trophy,
+  DollarSign,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,7 +43,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // OVERVIEW section - Team health at a glance
 const overviewNavItems = [
   { title: "Dashboard", icon: Home, path: "" },
-  // Calendar will be added in Phase 3
+  { title: "Calendar", icon: Calendar, path: "/calendar" },
+  { title: "Members", icon: Users, path: "/members" },
 ];
 
 // BUILD section - Technical work (robot building)
@@ -43,12 +52,38 @@ const buildNavItems = [
   { title: "Robots", icon: Bot, path: "/robots" },
   { title: "Parts", icon: Package, path: "/parts" },
   { title: "Orders", icon: ShoppingCart, path: "/orders" },
+  { title: "Software", icon: Code, path: "/software" },
+  { title: "Fabrication", icon: Printer, path: "/fabrication" },
   { title: "Vendors", icon: Store, path: "/vendors" },
 ];
 
-// TEAM section - Team management
-const teamNavItems = [
-  { title: "Members", icon: Users, path: "/members" },
+// OUTREACH section - Community engagement
+const outreachNavItems = [
+  { title: "Outreach", icon: Heart, path: "/outreach" },
+];
+
+// SPONSORSHIPS section - Funding relationships
+const sponsorshipsNavItems = [
+  { title: "Sponsors", icon: Handshake, path: "/sponsors" },
+];
+
+// MARKETING section - Team identity (configurable)
+const marketingNavItems = [
+  { title: "Marketing", icon: Megaphone, path: "/marketing" },
+];
+
+// OPERATIONS section - Team logistics
+const operationsNavItems = [
+  { title: "Operations", icon: Trophy, path: "/operations" },
+];
+
+// FINANCE section - Money management
+const financeNavItems = [
+  { title: "Finance", icon: DollarSign, path: "/finance" },
+];
+
+// SETTINGS section - Configuration
+const settingsNavItems = [
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
@@ -107,8 +142,11 @@ export function AppSidebar({ user, program, teamNumber }: AppSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
+        {/* OVERVIEW Section */}
         <SidebarGroup>
-          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Overview
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {overviewNavItems.map((item) => (
@@ -131,8 +169,11 @@ export function AppSidebar({ user, program, teamNumber }: AppSidebarProps) {
 
         <SidebarSeparator />
 
+        {/* BUILD Section */}
         <SidebarGroup>
-          <SidebarGroupLabel>Build</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Build
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {buildNavItems.map((item) => (
@@ -155,11 +196,149 @@ export function AppSidebar({ user, program, teamNumber }: AppSidebarProps) {
 
         <SidebarSeparator />
 
+        {/* OUTREACH Section */}
         <SidebarGroup>
-          <SidebarGroupLabel>Team</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Outreach
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {teamNavItems.map((item) => (
+              {outreachNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                  >
+                    <Link to={getTeamPath(item.path)}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* SPONSORSHIPS Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Sponsorships
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sponsorshipsNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                  >
+                    <Link to={getTeamPath(item.path)}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* MARKETING Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Marketing
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {marketingNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                  >
+                    <Link to={getTeamPath(item.path)}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* OPERATIONS Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Operations
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {operationsNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                  >
+                    <Link to={getTeamPath(item.path)}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* FINANCE Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Finance
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {financeNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                  >
+                    <Link to={getTeamPath(item.path)}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* SETTINGS Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Settings
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {settingsNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

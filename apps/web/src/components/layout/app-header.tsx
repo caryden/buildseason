@@ -36,11 +36,28 @@ export function AppHeader({ teamName, currentTeamId, teams }: AppHeaderProps) {
 
       if (section) {
         const sectionLabels: Record<string, string> = {
-          parts: "Parts",
-          bom: "BOM",
-          orders: "Orders",
-          vendors: "Vendors",
+          // Overview
+          calendar: "Calendar",
           members: "Members",
+          // Build
+          robots: "Robots",
+          parts: "Parts",
+          orders: "Orders",
+          software: "Software",
+          fabrication: "Fabrication",
+          vendors: "Vendors",
+          bom: "BOM",
+          // Outreach
+          outreach: "Outreach",
+          // Sponsorships
+          sponsors: "Sponsors",
+          // Marketing
+          marketing: "Marketing",
+          // Operations
+          operations: "Operations",
+          // Finance
+          finance: "Finance",
+          // Settings
           settings: "Settings",
         };
         const label = sectionLabels[section] || section;
