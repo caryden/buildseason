@@ -600,12 +600,16 @@ The naive approach to organizational learning is to accumulate rules in AGENTS.m
 Instead of accumulating rules, capture patterns in **focused skills**:
 
 ```
-.claude/commands/
+.claude/skills/           # Skills = reusable knowledge modules
 ├── ui-components.md      # Component patterns, shadcn usage
 ├── api-validation.md     # Zod schemas, error handling
 ├── accessibility.md      # ARIA, focus, keyboard nav
 ├── data-fetching.md      # TanStack Query patterns
 └── testing.md            # Test structure, mocking
+
+.claude/commands/         # Commands = user-invocable slash commands
+├── army.md               # /army - agent orchestration
+└── bead.md               # /bead - issue management
 ```
 
 **Benefits:**
