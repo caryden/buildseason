@@ -33,6 +33,7 @@
     "better-auth": "^1.1.14",
     "drizzle-orm": "^0.38.3",
     "hono": "^4.6.14",
+    "hono-rate-limiter": "^0.5.3",
     "zod": "^4.2.1"
   },
   "devDependencies": {

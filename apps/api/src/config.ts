@@ -25,6 +25,9 @@ interface Config {
   // Server
   port: number;
   nodeEnv: "development" | "production" | "test";
+
+  // CORS
+  corsOrigins: string[];
 }
 
 function getConfig(): Config {
@@ -55,6 +58,14 @@ function getConfig(): Config {
     // Server
     port: parseInt(process.env.PORT || "3000", 10),
     nodeEnv,
+
+    // CORS - parse comma-separated origins from env var
+    // In development, default to localhost origins; in production, require explicit config
+    corsOrigins: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
+      : nodeEnv === "development"
+        ? ["http://localhost:5173", "http://localhost:3000"]
+        : [],
   };
 
   // Validate required environment variables in production

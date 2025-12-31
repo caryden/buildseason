@@ -1,10 +1,13 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
+import { cors } from "hono/cors";
 import { serveStatic } from "hono/bun";
+import { rateLimiter } from "hono-rate-limiter";
 import { auth } from "./lib/auth";
 import { sessionMiddleware } from "./middleware/auth";
 import apiRoutes from "./routes/api";
+import { config } from "./config";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
@@ -22,6 +25,50 @@ if (hasFrontendBuild) {
 // Middleware
 app.use("*", logger());
 app.use("*", secureHeaders());
+
+// CORS middleware - configured via CORS_ORIGINS env var in production
+// In development, allows localhost:5173 and localhost:3000
+app.use(
+  "*",
+  cors({
+    origin: config.corsOrigins,
+    credentials: true,
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    maxAge: 600,
+  })
+);
+
+// Rate limiting middleware
+// General rate limit: 100 requests per minute per IP
+const generalRateLimiter = rateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  limit: 100,
+  standardHeaders: "draft-6",
+  keyGenerator: (c) =>
+    c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
+    c.req.header("x-real-ip") ||
+    "unknown",
+});
+
+// Stricter rate limit for auth/invite endpoints: 10 requests per minute per IP
+const authRateLimiter = rateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  limit: 10,
+  standardHeaders: "draft-6",
+  keyGenerator: (c) =>
+    c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
+    c.req.header("x-real-ip") ||
+    "unknown",
+});
+
+// Apply stricter rate limiting to auth and invite endpoints
+app.use("/api/auth/*", authRateLimiter);
+app.use("/api/teams/*/invite", authRateLimiter);
+app.use("/api/invites/*", authRateLimiter);
+
+// Apply general rate limiting to all other API endpoints
+app.use("/api/*", generalRateLimiter);
 
 // Better-Auth API routes - must be before session middleware
 // IMPORTANT: Hono's wildcard (*) only matches a SINGLE path segment.
