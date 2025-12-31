@@ -7,6 +7,7 @@ import {
   type TeamVariables,
 } from "../middleware/auth";
 import { db } from "../db";
+import teamSeasonsRoutes from "./seasons";
 import {
   teams,
   teamMembers,
@@ -1156,6 +1157,7 @@ const apiRoutes = new Hono()
   .route("/api/teams/:teamId/orders", teamOrdersRoutes)
   .route("/api/teams/:teamId/bom", teamBomRoutes)
   .route("/api/teams/:teamId/vendors", teamVendorsRoutes)
+  .route("/api/teams/:teamId/seasons", teamSeasonsRoutes)
   .route("/api/vendors", vendorsRoutes)
   .route("/api/invite", inviteRoutes)
   .route("/api/public/team", publicTeamRoutes);
