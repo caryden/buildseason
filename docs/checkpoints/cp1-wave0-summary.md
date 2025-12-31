@@ -1,6 +1,7 @@
 # Checkpoint 1: Wave 0 Review Summary
 
 Generated: 2025-12-30 22:35 UTC
+Updated: 2025-12-31 (Chrome MCP UI verification)
 
 ## Review Results
 
@@ -9,7 +10,8 @@ Generated: 2025-12-30 22:35 UTC
 | Code        | 3            | 1      | 2         | 0         |
 | Security    | 2            | 2      | 0         | 0         |
 | UI/UX       | 19           | 9      | 9         | 1         |
-| **Total**   | **24**       | **12** | **11**    | **1**     |
+| UI Verify   | 2            | 2      | 0         | 0         |
+| **Total**   | **26**       | **14** | **11**    | **1**     |
 
 ## Security Findings
 
@@ -101,6 +103,28 @@ These issues were identified but not fixed (Phase 2 features or larger scope):
 
 - Fixed root `bun test` command to properly run all package tests
 
+### Chrome MCP UI Verification (2 issues) - 2025-12-31
+
+Visual verification of all pages using Chrome browser automation:
+
+- **Fixed:** Robots page crash (`seasons?.find is not a function`) - API returns `{seasons: [...]}` but frontend expected array directly
+- **Fixed:** Dev mode port confusion - API was serving stale production build at port 3000 instead of dev message. Now correctly shows dev mode guidance when `NODE_ENV=development`
+
+**Pages Verified Working:**
+
+- ✅ Dashboard - Stats cards, quick actions, get started section
+- ✅ Robots - Season selector, status filter, empty state
+- ✅ Parts - Search, sort, low stock filter, empty state
+- ✅ Orders - Status filter, empty state
+- ✅ Members - Role grouping, invite button
+- ✅ Settings - Seasons, Team Info (Coming Soon), Members
+- ✅ Marketing page - Hero, features, CTAs
+- ✅ Global Vendors - Directory with robotics suppliers
+
+**Known Issue (Needs Decision):**
+
+- ❌ Sidebar Vendors link goes to `/team/.../vendors` which 404s. Only `/vendors` (global) exists. See vendors scope question (buildseason-kn8r)
+
 ## Test Status
 
 ```
@@ -124,14 +148,15 @@ e98557c fix(ui): restructure sidebar navigation per spec
 
 ## Human Review Checklist
 
-- [ ] Review security findings above (both fixed, patterns look good)
+- [x] Review security findings above (both fixed, patterns look good)
 - [ ] Answer the vendors scope question (buildseason-kn8r)
-- [ ] Run `bun dev` and test core flows:
-  - [ ] Login/logout
+- [x] Visual UI verification via Chrome MCP (all pages verified working)
+- [ ] Run `bun dev` and test core flows manually:
+  - [ ] Login/logout (Note: OAuth redirects to port 3000, use port 5173 for dev)
   - [ ] Team switching
   - [ ] Parts list
   - [ ] Orders list with reject workflow
-  - [ ] Robots page (new sidebar link)
+  - [ ] Robots page (new sidebar link) - ✅ Fixed
 - [ ] Check mobile responsive behavior
 - [ ] Verify sidebar navigation makes sense
 

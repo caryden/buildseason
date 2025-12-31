@@ -14,8 +14,11 @@ import { join } from "path";
 const app = new Hono();
 
 // Check if we have a built frontend (in monorepo: ../../dist/web)
+// In development, don't serve the production build - use Vite dev server instead
 const frontendDistPath = join(process.cwd(), "../../dist/web");
-const hasFrontendBuild = existsSync(join(frontendDistPath, "index.html"));
+const isDevelopment = config.nodeEnv === "development";
+const hasFrontendBuild =
+  !isDevelopment && existsSync(join(frontendDistPath, "index.html"));
 
 // Static files - serve built frontend assets in production
 if (hasFrontendBuild) {

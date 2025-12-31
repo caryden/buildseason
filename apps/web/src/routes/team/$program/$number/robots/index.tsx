@@ -27,6 +27,14 @@ export const Route = createFileRoute("/team/$program/$number/robots/")({
   }),
 });
 
+type ApiSeason = {
+  id: string;
+  seasonName: string;
+  seasonYear: number;
+  isActive: boolean;
+  isArchived: boolean;
+};
+
 type Season = {
   id: string;
   name: string;
@@ -75,7 +83,17 @@ function RobotsPage() {
     queryFn: async () => {
       const res = await fetch(`/api/teams/${teamId}/seasons`);
       if (!res.ok) throw new Error("Failed to fetch seasons");
-      return res.json() as Promise<Season[]>;
+      const data = (await res.json()) as {
+        seasons: ApiSeason[];
+        activeSeasonId: string | null;
+      };
+      // Map API fields to component fields
+      return data.seasons.map((s) => ({
+        id: s.id,
+        name: s.seasonName,
+        year: s.seasonYear,
+        isCurrent: s.isActive,
+      })) as Season[];
     },
     enabled: !!teamId,
   });
