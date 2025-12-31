@@ -89,8 +89,33 @@ export const teams = sqliteTable("teams", {
   program: text("program").$type<Program>().notNull().default("ftc"),
   name: text("name").notNull(),
   number: text("number").notNull(), // Team number like "5064"
-  season: text("season").notNull(), // e.g., "2024-2025"
+  season: text("season").notNull(), // e.g., "2024-2025" (deprecated, use activeSeasonId)
+  activeSeasonId: text("active_season_id"), // References seasons.id
   inviteCode: text("invite_code").unique(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+// ============================================================================
+// Seasons
+// ============================================================================
+
+export const seasons = sqliteTable("seasons", {
+  id: text("id").primaryKey(),
+  teamId: text("team_id")
+    .notNull()
+    .references(() => teams.id, { onDelete: "cascade" }),
+  seasonYear: text("season_year").notNull(), // e.g., "2024-2025"
+  seasonName: text("season_name").notNull(), // e.g., "Into The Deep", "CenterStage"
+  startDate: integer("start_date", { mode: "timestamp" }),
+  endDate: integer("end_date", { mode: "timestamp" }),
+  isArchived: integer("is_archived", { mode: "boolean" })
+    .notNull()
+    .default(false),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -109,6 +134,9 @@ export const teamMembers = sqliteTable("team_members", {
   teamId: text("team_id")
     .notNull()
     .references(() => teams.id, { onDelete: "cascade" }),
+  seasonId: text("season_id").references(() => seasons.id, {
+    onDelete: "set null",
+  }), // Which season this membership applies to
   role: text("role").$type<TeamRole>().notNull().default("student"),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
@@ -278,13 +306,26 @@ export const usersRelations = relations(users, ({ many }) => ({
   approvedOrders: many(orders, { relationName: "approvedBy" }),
 }));
 
-export const teamsRelations = relations(teams, ({ many }) => ({
+export const teamsRelations = relations(teams, ({ one, many }) => ({
   members: many(teamMembers),
+  seasons: many(seasons),
+  activeSeason: one(seasons, {
+    fields: [teams.activeSeasonId],
+    references: [seasons.id],
+  }),
   parts: many(parts),
   bomItems: many(bomItems),
   orders: many(orders),
   vendors: many(vendors),
   invites: many(teamInvites),
+}));
+
+export const seasonsRelations = relations(seasons, ({ one, many }) => ({
+  team: one(teams, {
+    fields: [seasons.teamId],
+    references: [teams.id],
+  }),
+  members: many(teamMembers),
 }));
 
 export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
@@ -295,6 +336,10 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
   team: one(teams, {
     fields: [teamMembers.teamId],
     references: [teams.id],
+  }),
+  season: one(seasons, {
+    fields: [teamMembers.seasonId],
+    references: [seasons.id],
   }),
 }));
 
