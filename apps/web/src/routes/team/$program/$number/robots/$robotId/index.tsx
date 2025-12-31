@@ -13,9 +13,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge, type RobotStatus } from "@/components/ui/status-badge";
-import { ArrowLeft, Loader2, Bot, Layers } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Bot,
+  Layers,
+  Wrench,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/team/$program/$number/robots/$robotId/")(
@@ -66,6 +81,10 @@ function EditRobotPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Disassemble dialog state
+  const [disassembleDialogOpen, setDisassembleDialogOpen] = useState(false);
+  const [disassembleNotes, setDisassembleNotes] = useState("");
+
   // Get team info
   const { data: teams } = useQuery({
     queryKey: queryKeys.teams.list(),
@@ -92,6 +111,55 @@ function EditRobotPage() {
       return res.json() as Promise<Robot>;
     },
     enabled: !!teamId,
+  });
+
+  // Fetch BOM summary for disassemble dialog
+  const { data: bomSummary } = useQuery({
+    queryKey: ["teams", teamId, "robots", robotId, "bom", "summary"],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/teams/${teamId}/robots/${robotId}/bom/summary`
+      );
+      if (!res.ok) return null;
+      return res.json() as Promise<{
+        totalItems: number;
+        totalAllocated: number;
+      }>;
+    },
+    enabled: !!teamId && !!robotId,
+  });
+
+  // Disassemble mutation
+  const disassembleMutation = useMutation({
+    mutationFn: async (notes: string) => {
+      const res = await fetch(
+        `/api/teams/${teamId}/robots/${robotId}/disassemble`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: notes || null }),
+        }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to disassemble robot");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Robot disassembled - parts returned to inventory");
+      queryClient.invalidateQueries({
+        queryKey: ["teams", teamId, "robots"],
+      });
+      setDisassembleDialogOpen(false);
+      navigate({
+        to: "/team/$program/$number/robots",
+        params: { program, number },
+      });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
   });
 
   // Populate form when robot data loads
@@ -205,15 +273,27 @@ function EditRobotPage() {
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back to Robots
         </Link>
-        <Button variant="outline" asChild>
-          <Link
-            to="/team/$program/$number/robots/$robotId/bom"
-            params={{ program, number, robotId }}
-          >
-            <Layers className="mr-2 h-4 w-4" />
-            View BOM
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          {(robot.status === "building" ||
+            robot.status === "competition_ready") && (
+            <Button
+              variant="outline"
+              onClick={() => setDisassembleDialogOpen(true)}
+            >
+              <Wrench className="mr-2 h-4 w-4" />
+              Disassemble
+            </Button>
+          )}
+          <Button variant="outline" asChild>
+            <Link
+              to="/team/$program/$number/robots/$robotId/bom"
+              params={{ program, number, robotId }}
+            >
+              <Layers className="mr-2 h-4 w-4" />
+              View BOM
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -322,6 +402,76 @@ function EditRobotPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Disassemble Dialog */}
+      <Dialog
+        open={disassembleDialogOpen}
+        onOpenChange={setDisassembleDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Disassemble Robot</DialogTitle>
+            <DialogDescription>
+              This will return all allocated parts to inventory
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-3 p-4 rounded-lg border border-red-500/50 bg-red-500/10">
+              <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-600">
+                This action will deallocate all parts from this robot. The BOM
+                will be preserved but parts will return to the team inventory.
+              </p>
+            </div>
+
+            {bomSummary && (
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">
+                  Parts to be returned:
+                </p>
+                <p className="font-medium">
+                  {bomSummary.totalItems} items,{" "}
+                  {bomSummary.totalAllocated || 0} total quantity
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="disassembleNotes">
+                Disassembly Notes (optional)
+              </Label>
+              <Textarea
+                id="disassembleNotes"
+                placeholder="e.g., End of season storage, Rebuilding for next competition..."
+                value={disassembleNotes}
+                onChange={(e) => setDisassembleNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDisassembleDialogOpen(false);
+                setDisassembleNotes("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => disassembleMutation.mutate(disassembleNotes)}
+              disabled={disassembleMutation.isPending}
+            >
+              {disassembleMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Disassemble Robot
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
