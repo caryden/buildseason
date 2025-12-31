@@ -283,7 +283,7 @@ function RobotBomPage() {
             </Button>
             <Button asChild>
               <Link
-                to="/team/$program/$number/robots/$robotId/bom"
+                to="/team/$program/$number/robots/$robotId/bom/new"
                 params={{ program, number, robotId }}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -405,7 +405,7 @@ function RobotBomPage() {
             {canEdit && selectedSubsystem === "all" && (
               <Button asChild>
                 <Link
-                  to="/team/$program/$number/robots/$robotId/bom"
+                  to="/team/$program/$number/robots/$robotId/bom/new"
                   params={{ program, number, robotId }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
