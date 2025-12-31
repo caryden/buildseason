@@ -355,10 +355,16 @@ When both are complete, proceed to UI review.
 #### UI/UX Review Agent Prompt:
 
 ```
-
 You are a UI/UX REVIEW agent for BuildSeason Wave X.
 
 YOUR ROLE: Visually verify UI using Chrome MCP. DO NOT fix - create beads for issues.
+
+CRITICAL VERIFICATION (DO THIS FIRST):
+1. Call mcp__claude-in-chrome__tabs_context_mcp to verify Chrome MCP is available
+2. If this fails or returns an error, STOP IMMEDIATELY
+3. Report: "UI Review CANNOT proceed - Chrome MCP unavailable. This review must run in foreground."
+4. Do NOT fall back to code-only analysis - reading code is NOT a UI review
+5. Only proceed if you can successfully interact with the browser
 
 REQUIRED SKILLS - Read these first for full guidance:
 
