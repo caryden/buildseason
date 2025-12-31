@@ -1,6 +1,6 @@
 ---
 description: Agent army orchestration - status, deploy, and management (project)
-argument-hint: <status|deploy|review|deploy-fixes|prepare-checkpoint> [options]
+argument-hint: <status|deploy|review|deploy-fixes|prepare-checkpoint|retro|prepare> [options]
 ---
 
 # Army Command
@@ -18,23 +18,29 @@ Parse the first word of `$ARGUMENTS` to determine subcommand:
 | `review`             | `/army review <wave>`             | Run automated reviews (code, security, UI/UX) |
 | `deploy-fixes`       | `/army deploy-fixes <wave>`       | Fix issues discovered by reviews              |
 | `prepare-checkpoint` | `/army prepare-checkpoint <wave>` | Generate checkpoint summary for human review  |
+| `retro`              | `/army retro <wave>`              | After-action review, create/update skills     |
+| `prepare`            | `/army prepare <wave>`            | Forward-looking skill creation for next wave  |
 
 ## Complete Wave Workflow
 
 ```
 Wave N Complete
     ↓
-/army review N           ← 3 parallel review agents
+/army review N              ← 3 parallel review agents
     ↓
 Creates discovery beads (bugs, questions)
     ↓
-/army deploy-fixes N     ← fix discovered issues
+/army deploy-fixes N        ← fix discovered issues
     ↓
 /army prepare-checkpoint N  ← generate summary
     ↓
 Human Review (you close checkpoint when satisfied)
     ↓
-/army deploy N+1         ← next wave unlocked
+/army retro N               ← after-action review, create skills
+    ↓
+/army prepare N+1           ← forward-looking skills for next wave
+    ↓
+/army deploy N+1            ← next wave unlocked
 ```
 
 ---
@@ -645,6 +651,326 @@ NEXT STEPS:
 2. Answer any questions (update beads, remove 'human' label)
 3. When satisfied: bd close <checkpoint-bead>
 4. Then: /army deploy <next-wave>
+============================================================
+```
+
+---
+
+## SUBCOMMAND: retro
+
+**Usage:** `/army retro <wave-number>`
+
+### Purpose
+
+After-action review for a completed wave. Analyze what went well/wrong and create/update skills to capture learnings.
+
+### Instructions
+
+1. **Create retro tracking bead:**
+
+```bash
+bd create --title="Wave X Retrospective" --type=task --priority=2 \
+  --label="process-improvement"
+```
+
+Note the bead ID (e.g., `buildseason-xyz`).
+
+2. **Gather inputs:**
+
+```bash
+# Review findings from this wave
+bd list --label="review:code" --label="discovered-from:buildseason-<checkpoint>"
+bd list --label="review:security" --label="discovered-from:buildseason-<checkpoint>"
+bd list --label="review:ux" --label="discovered-from:buildseason-<checkpoint>"
+
+# Check what was fixed vs remains open
+bd list --label="review:code" --status=closed
+bd list --label="review:security" --status=open
+
+# Read the checkpoint summary
+cat docs/checkpoints/cp<N>-wave<W>-summary.md
+```
+
+3. **Analyze patterns (use the skill-building skill for guidance):**
+
+Read `.claude/skills/skill-building/SKILL.md` for skill creation patterns.
+
+Ask these questions:
+
+- What patterns led to issues being discovered?
+- What knowledge was missing that caused bugs?
+- Which anti-patterns keep recurring?
+- What worked exceptionally well?
+- What should be documented for future waves?
+
+4. **Identify skill opportunities:**
+
+| Pattern Observed           | Skill Action                               |
+| -------------------------- | ------------------------------------------ |
+| Same mistake repeated      | Create new skill with anti-pattern warning |
+| Missing context            | Update existing skill with edge cases      |
+| New technology used        | Create skill for that technology           |
+| Review found common issues | Add to review checklist skills             |
+
+5. **Create or update skills:**
+
+For each learning, either:
+
+- Create new skill in `.claude/skills/<name>/SKILL.md`
+- Update existing skill with new learnings
+- Add to review checklists in `code-review`, `security-review`, or `ui-design-review`
+
+6. **Create process-improvement beads for larger changes:**
+
+```bash
+bd create --title="Skill: <name>" --type=task --priority=2 \
+  --label="process-improvement" \
+  --label="discovered-from:<retro-bead-id>" \
+  --description="<what to create/update and why>"
+```
+
+7. **Generate retrospective document:**
+
+Create file: `docs/checkpoints/wave<W>-retrospective.md`
+
+```markdown
+# Wave X Retrospective
+
+**Date:** YYYY-MM-DD
+**Wave:** X
+**Duration:** <sessions/time>
+
+## Summary
+
+<Brief summary of wave outcomes>
+
+## Metrics
+
+| Metric              | Value |
+| ------------------- | ----- |
+| Issues reviewed     | X     |
+| Issues fixed        | Y     |
+| Issues deferred     | Z     |
+| Questions for human | Q     |
+| Skills created      | N     |
+| Skills updated      | M     |
+
+## What Went Well
+
+### 1. <Topic>
+
+<Details>
+
+### 2. <Topic>
+
+<Details>
+
+## What Went Wrong
+
+### 1. <Problem>
+
+**Problem:** <description>
+**Impact:** <what happened>
+**Fix:** <how it was addressed>
+**Skill created:** `<skill-name>` (if applicable)
+
+### 2. <Problem>
+
+...
+
+## Skills Created
+
+| Skill    | Purpose   | Lines |
+| -------- | --------- | ----- |
+| `<name>` | <purpose> | ~X    |
+
+## Skills Updated
+
+| Skill    | Changes          |
+| -------- | ---------------- |
+| `<name>` | <what was added> |
+
+## Process Improvements
+
+### Implemented
+
+1. <change made>
+
+### Future (Beads Created)
+
+1. `<bead-id>` - <description>
+
+## Recommendations for Next Wave
+
+1. <recommendation>
+2. <recommendation>
+```
+
+8. **Close retro bead and commit:**
+
+```bash
+bd close <retro-bead-id> --reason="Created X skills, updated Y skills, Z process improvements"
+git add -A
+git commit -m "docs: Wave X retrospective
+
+- Created X new skills
+- Updated Y existing skills
+- Z process improvement beads
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+bd sync
+git push
+```
+
+9. **Report completion:**
+
+```
+============================================================
+              WAVE X RETROSPECTIVE COMPLETE
+============================================================
+
+Document: docs/checkpoints/waveX-retrospective.md
+
+Skills Created: N
+Skills Updated: M
+Process Improvements: P
+
+Key Learnings:
+• <learning 1>
+• <learning 2>
+• <learning 3>
+
+Next: /army prepare <next-wave>
+============================================================
+```
+
+---
+
+## SUBCOMMAND: prepare
+
+**Usage:** `/army prepare <wave-number>`
+
+### Purpose
+
+Forward-looking skill creation. Analyze upcoming beads and preemptively create skills for anticipated patterns.
+
+### Instructions
+
+1. **Create prepare tracking bead:**
+
+```bash
+bd create --title="Wave X Preparation" --type=task --priority=2 \
+  --label="process-improvement"
+```
+
+2. **Identify beads for the target wave:**
+
+```bash
+# Get all beads that will be worked in this wave
+# Wave definitions from the deploy subcommand:
+# Wave 1: b5u.1, il2.1
+# Wave 2: b5u.2, b5u.3, il2.2, il2.3
+# etc.
+
+bd show buildseason-b5u.1
+bd show buildseason-il2.1
+# ... for each bead in the wave
+```
+
+3. **Analyze patterns in upcoming work:**
+
+Look for:
+
+- **Multiple beads touching same area** → Shared skill needed
+- **New technology being introduced** → Research and document patterns
+- **Complex integrations** → Create integration skill
+- **UI-heavy work** → Ensure brand-guidelines is complete
+- **API work** → Ensure api-patterns covers the cases
+
+4. **Map beads to potential skills:**
+
+| Bead  | Area        | Skill Needed           | Exists? |
+| ----- | ----------- | ---------------------- | ------- |
+| b5u.1 | Navigation  | `navigation-patterns`  | No      |
+| il2.1 | Discord bot | `discord-bot-patterns` | No      |
+| ...   | ...         | ...                    | ...     |
+
+5. **For each missing skill, create it:**
+
+Read `.claude/skills/skill-building/SKILL.md` for creation guidance.
+
+```bash
+# Research best practices
+# Look at existing code patterns
+# Check external documentation
+
+# Create the skill
+mkdir -p .claude/skills/<skill-name>
+# Write SKILL.md with:
+# - YAML frontmatter (name, description, allowed-tools)
+# - Patterns and examples
+# - Anti-patterns
+# - Reference links
+```
+
+6. **Update CLAUDE.md skills table:**
+
+Add new skills to the skills table in `CLAUDE.md`.
+
+7. **Add skill references to bead descriptions (optional):**
+
+If beads support a skills field, add references:
+
+```bash
+bd update <bead-id> --description="...
+
+Skills to reference:
+- navigation-patterns
+- brand-guidelines"
+```
+
+8. **Close prepare bead and commit:**
+
+```bash
+bd close <prepare-bead-id> --reason="Created X skills for Wave Y"
+git add -A
+git commit -m "feat: prepare skills for Wave X
+
+Created skills:
+- <skill-1>
+- <skill-2>
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+bd sync
+git push
+```
+
+9. **Report preparation:**
+
+```
+============================================================
+              WAVE X PREPARATION COMPLETE
+============================================================
+
+Analyzed: N beads
+
+Skills Created:
+┌─────────────────────────────────────────────────────────┐
+│ navigation-patterns                                      │
+│ For: Sidebar restructure, route handling                │
+│ File: .claude/skills/navigation-patterns/SKILL.md       │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ discord-bot-patterns                                     │
+│ For: GLaDOS Discord integration                         │
+│ File: .claude/skills/discord-bot-patterns/SKILL.md      │
+└─────────────────────────────────────────────────────────┘
+
+Skills Updated: M
+Beads Tagged: P
+
+Ready to deploy: /army deploy <wave>
 ============================================================
 ```
 

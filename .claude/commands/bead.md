@@ -52,12 +52,31 @@ bd show <bead-id>
      - OnShape → `docs/onshape-spec.md`
      - Vendor → `docs/vendor-stock-harvesting-spec.md`
 
-6. **Check for model label:**
+6. **Extract and load skills:**
+
+   Skills can be specified in bead description with a "Skills:" section:
+
+   ```
+   Skills:
+   - brand-guidelines
+   - chrome-mcp-testing
+   ```
+
+   Or via labels with `skill:` prefix (e.g., `skill:brand-guidelines`).
+
+   For each skill found:
+   - Check if `.claude/skills/<skill-name>/SKILL.md` exists
+   - If exists, read the skill file to load context
+   - If not exists, warn: "⚠️ Skill '<name>' not found"
+
+   Skills provide domain-specific patterns and anti-patterns for the task.
+
+7. **Check for model label:**
    - `model:opus` → Suggest extended thinking for complex work
    - `model:haiku` → Note this is a simple task
    - No label → Default sonnet is appropriate
 
-7. **Display work summary:**
+8. **Display work summary:**
 
 ```
 ============================================================
@@ -73,14 +92,23 @@ Description:
 ------------------------------------------------------------
 CONTEXT LOADED:
 ------------------------------------------------------------
+FILES:
   ✓ apps/web/src/foo.tsx (exists)
   ✓ apps/web/src/bar.tsx (exists)
   ○ apps/web/src/new.tsx (will create)
-  📄 docs/ui-refocus-spec.md (spec loaded)
+
+SPECS:
+  📄 docs/ui-refocus-spec.md
+
+SKILLS:
+  🎯 brand-guidelines (loaded)
+  🎯 chrome-mcp-testing (loaded)
+  ⚠️  unknown-skill (not found)
 
 ------------------------------------------------------------
 READY TO WORK
 ------------------------------------------------------------
+Model: sonnet (or opus if model:opus label)
 Branch: git checkout -b feat/<bead-id-short>
 
 When done:
