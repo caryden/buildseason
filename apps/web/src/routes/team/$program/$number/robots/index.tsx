@@ -159,7 +159,7 @@ function RobotsPage() {
         {canEdit && (
           <Button asChild>
             <Link
-              to="/team/$program/$number/robots"
+              to="/team/$program/$number/robots/new"
               params={{ program, number }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -227,7 +227,7 @@ function RobotsPage() {
             {canEdit && !searchParams.status && (
               <Button asChild>
                 <Link
-                  to="/team/$program/$number/robots"
+                  to="/team/$program/$number/robots/new"
                   params={{ program, number }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -272,8 +272,8 @@ function RobotCard({
       className="cursor-pointer hover:bg-muted/50 transition-colors"
       onClick={() =>
         navigate({
-          to: "/team/$program/$number/robots",
-          params: { program, number },
+          to: "/team/$program/$number/robots/$robotId",
+          params: { program, number, robotId: robot.id },
         })
       }
     >
