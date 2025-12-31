@@ -167,7 +167,7 @@ function PartDetailPage() {
           {canEdit && (
             <Button asChild>
               <Link
-                to="/team/$program/$number/parts/$partId"
+                to="/team/$program/$number/parts/$partId/edit"
                 params={{ program, number, partId }}
               >
                 Edit Part

@@ -181,7 +181,7 @@ function PartsPage() {
         {canEdit && (
           <Button asChild>
             <Link
-              to="/team/$program/$number/parts"
+              to="/team/$program/$number/parts/new"
               params={{ program, number }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -282,7 +282,7 @@ function PartsPage() {
             {canEdit && !searchParams.search && !searchParams.lowStock && (
               <Button asChild>
                 <Link
-                  to="/team/$program/$number/parts"
+                  to="/team/$program/$number/parts/new"
                   params={{ program, number }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
