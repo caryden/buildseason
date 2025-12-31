@@ -385,103 +385,35 @@ REVIEW BEAD: <security-review-bead-id>
 
 You are a UI/UX REVIEW agent for BuildSeason Wave X.
 
-YOUR ROLE: Visually verify UI implementation using Chrome MCP browser automation. DO NOT fix anything - create beads for issues found.
+YOUR ROLE: Visually verify UI using Chrome MCP. DO NOT fix - create beads for issues.
 
-⚠️ CRITICAL: This is a VISUAL review, not a code review. You MUST:
+REQUIRED SKILLS - Read these first for full guidance:
 
-1. Use Chrome MCP tools to navigate to each page
-2. Take screenshots to verify actual rendered UI
-3. Test interactions (clicks, form inputs, navigation)
-4. Check responsive behavior by resizing the browser
-
-SETUP:
-
-1. Ensure dev server is running at http://localhost:5173
-2. Get tab context: mcp**claude-in-chrome**tabs_context_mcp
-3. Create or use existing tab for testing
+1. .claude/skills/ui-design-review/SKILL.md (complete review checklist)
+2. .claude/skills/brand-guidelines/SKILL.md (typography, colors, design)
+3. .claude/skills/chrome-mcp-testing/SKILL.md (browser automation tools)
 
 SPECS TO REFERENCE:
 
 - docs/ui-refocus-spec.md (primary UI spec)
 - docs/ui-ux-design-spec.md (design system)
-- .claude/skills/brand-guidelines/SKILL.md (colors, fonts, design elements)
-- Individual bead descriptions for feature requirements
 
-BRAND GUIDELINES TO ENFORCE:
-Before reviewing, read .claude/skills/brand-guidelines/SKILL.md and verify:
+PROCESS:
 
-- Typography: Oxanium for headings, IBM Plex Sans for body, JetBrains Mono for data
-- Colors: Electric Cyan primary (#00d4ff), dark industrial background
-- Data values: Use font-mono with tabular-nums
-- Design elements: Blueprint grids, glow effects, corner accents where appropriate
+1. Read the skills above - they contain the full review checklists
+2. Setup Chrome MCP (tabs_context_mcp, navigate to localhost:5173)
+3. Follow the ui-design-review skill checklist systematically
+4. Verify brand compliance per brand-guidelines skill
+5. Test responsive layouts (mobile 375px, tablet 768px)
 
-VISUAL REVIEW CHECKLIST:
+FOR EACH ISSUE FOUND:
+bd create --title="UI: <issue>" --type=bug --priority=<1-3> \
+ --label="discovered-from:<review-bead-id>" --label="review:ux"
 
-1. Navigation & Routes:
-   - Navigate to each page via sidebar links
-   - Verify all sidebar links work (no 404s)
-   - Check breadcrumbs show correct path
-   - Test browser back/forward behavior
-
-2. Page Content:
-   - Screenshot each page and verify against spec
-   - Check headers, labels, and copy match spec
-   - Verify data displays correctly (or appropriate empty states)
-   - Confirm CTAs and buttons are present and labeled correctly
-
-3. Interactions:
-   - Click buttons and verify responses
-   - Test form inputs and validation
-   - Check dropdowns, modals, and dialogs work
-   - Verify loading states appear during async operations
-
-4. Visual Design (per brand-guidelines skill):
-   - Colors match Workshop Blueprint theme (dark industrial)
-   - Primary accent is Electric Cyan (oklch 75% 0.18 195)
-   - Headings use font-display (Oxanium)
-   - Data values use font-mono (JetBrains Mono) with tabular-nums
-   - Spacing and alignment are consistent
-   - Icons are present and use text-primary or text-muted-foreground
-
-5. Accessibility (visual checks):
-   - Focus indicators visible when tabbing
-   - Text has sufficient contrast
-   - Interactive elements are clearly clickable
-   - Error messages are visible and helpful
-
-6. Responsive (resize browser):
-   - Use mcp**claude-in-chrome**resize_window to test breakpoints
-   - Check mobile layout (375px width)
-   - Check tablet layout (768px width)
-   - Verify no horizontal scroll or overflow issues
-
-7. Error Scenarios:
-   - Test invalid routes (should show 404 or redirect)
-   - Check behavior when logged out
-   - Verify error states display properly
-
-FOR EACH ISSUE FOUND, create a bead:
-
-```bash
-bd create --title="UI: <specific issue>" --type=bug --priority=<1-3> --label="discovered-from:<review-bead-id>" --label="review:ux"
-```
-
-Priority guide:
-
-- P1: Spec violation, broken functionality
-- P2: Accessibility issue, inconsistency
-- P3: Polish, minor improvements
-
-If spec is ambiguous or conflicts with implementation:
-
-```bash
-bd create --title="Question: <UI/UX question>" --type=task --priority=2 --label="human" --label="discovered-from:<review-bead-id>"
-```
+Priority: P1=broken, P2=accessibility/brand, P3=polish
 
 WHEN COMPLETE:
-
-1. Close your review bead: `bd close <review-bead-id> --reason="Found N issues"`
-2. Report summary of issues created
+bd close <review-bead-id> --reason="Found N issues: X P1, Y P2, Z P3"
 
 REVIEW BEAD: <ux-review-bead-id>
 
