@@ -26,11 +26,12 @@ export function AppHeader({ teamName, currentTeamId, teams }: AppHeaderProps) {
     const parts = pathname.split("/").filter(Boolean);
     const breadcrumbs: { label: string; href?: string }[] = [];
 
-    if (parts.includes("teams") && teamName) {
+    if (parts.includes("team") && teamName) {
       breadcrumbs.push({ label: teamName });
 
-      // Find the section after teamId
-      const teamIdIndex = parts.indexOf("teams") + 1;
+      // Find the section after teamId (route: /team/$program/$number/$section)
+      const teamIndex = parts.indexOf("team");
+      const teamIdIndex = teamIndex + 2; // Skip past program and number
       const section = parts[teamIdIndex + 1];
 
       if (section) {
