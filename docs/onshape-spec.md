@@ -1,10 +1,13 @@
 # OnShape & CAD Integration Specification
+
 ## BuildSeason CAD-to-Inventory Integration
 
 **Version:** 1.0
 **Date:** December 30, 2025
 **Status:** Draft
-**Companion Documents:** [specification.md](./specification.md), [requirements.md](./requirements.md)
+**Companion Documents:** [specification.md](./specification.md), [requirements.md](./requirements.md), [ui-refocus-spec.md](./ui-refocus-spec.md)
+
+> **UI Integration:** See [ui-refocus-spec.md](./ui-refocus-spec.md) Phase 4 (Robots & BOM) and Phase 5 (Build - Software & Fabrication) for how OnShape BOM data surfaces in the UI.
 
 ---
 
@@ -13,6 +16,7 @@
 This document specifies how BuildSeason will integrate with CAD systems to provide real-time BOM (Bill of Materials) synchronization, inventory awareness, and proactive part ordering assistance. The primary focus is OnShape (cloud-native, dominant in FTC), with considerations for Fusion 360 and SolidWorks (common alternatives used by students).
 
 **Key Goals:**
+
 1. **Real-time BOM awareness** — Know when design changes affect parts needs
 2. **Inventory cross-referencing** — Match CAD parts to vendor catalogs and team inventory
 3. **Proactive notifications** — Alert students/mentors when parts need ordering
@@ -39,6 +43,7 @@ This document specifies how BuildSeason will integrate with CAD systems to provi
 ### 1.1 Why OnShape First
 
 OnShape is the dominant CAD platform for FTC teams due to:
+
 - **100% cloud-native** — No installation, works on Chromebooks (common in schools)
 - **Free for education** — Full access for students and educators
 - **Real-time collaboration** — Multiple students can work simultaneously
@@ -51,13 +56,14 @@ OnShape provides a comprehensive REST API documented at [onshape-public.github.i
 
 #### Authentication Methods
 
-| Method | Use Case | Security Level |
-|--------|----------|----------------|
-| **OAuth2** | Production apps, App Store | Highest (required for App Store) |
-| **API Keys** | Personal automation, internal tools | Medium (suitable for server-to-server) |
-| **Signed Requests** | Enhanced security for API keys | Medium-High |
+| Method              | Use Case                            | Security Level                         |
+| ------------------- | ----------------------------------- | -------------------------------------- |
+| **OAuth2**          | Production apps, App Store          | Highest (required for App Store)       |
+| **API Keys**        | Personal automation, internal tools | Medium (suitable for server-to-server) |
+| **Signed Requests** | Enhanced security for API keys      | Medium-High                            |
 
 **Recommendation:** Use OAuth2 for the BuildSeason integration. This:
+
 - Authenticates both the application AND the user
 - Provides proper scopes for accessing team documents
 - Required if we ever want to publish to OnShape App Store
@@ -78,9 +84,9 @@ OnShape provides a comprehensive REST API documented at [onshape-public.github.i
 
 #### Required OAuth2 Scopes
 
-| Scope | Purpose |
-|-------|---------|
-| `OAuth2Read` | Read documents, assemblies, BOMs, part properties |
+| Scope           | Purpose                                              |
+| --------------- | ---------------------------------------------------- |
+| `OAuth2Read`    | Read documents, assemblies, BOMs, part properties    |
 | `OAuth2ReadPII` | Read user info (name, email) for team member linking |
 
 **Note:** We do NOT need `OAuth2Write` scope — BuildSeason reads from OnShape but never modifies CAD data.
@@ -94,12 +100,14 @@ GET /api/assemblies/d/{did}/{wvm}/{wvmid}/e/{eid}/bom
 ```
 
 **Parameters:**
+
 - `did` — Document ID
 - `wvm` — Workspace/Version/Microversion indicator (`w`, `v`, or `m`)
 - `wvmid` — The actual workspace/version/microversion ID
 - `eid` — Element ID (specific assembly tab)
 
 **Response Structure:**
+
 ```json
 {
   "bomTable": {
@@ -117,7 +125,11 @@ GET /api/assemblies/d/{did}/{wvm}/{wvmid}/e/{eid}/bom
     ],
     "rows": [
       {
-        "itemSource": { "fullConfiguration": "...", "documentId": "...", "elementId": "..." },
+        "itemSource": {
+          "fullConfiguration": "...",
+          "documentId": "...",
+          "elementId": "..."
+        },
         "item": "1",
         "quantity": 4,
         "partNumber": "REV-41-1877",
@@ -137,13 +149,13 @@ OnShape webhooks enable real-time notifications when documents change.
 
 #### Available Events
 
-| Event | Description | Use Case |
-|-------|-------------|----------|
-| `onshape.model.lifecycle.changed` | Model/assembly modified | Trigger BOM diff check |
-| `onshape.model.translation.complete` | Export completed | Not needed for BOM |
-| `onshape.revision.created` | New revision created | Track formal releases |
-| `onshape.model.lifecycle.metadata` | Properties modified | Part info updated |
-| `onshape.model.lifecycle.createversion` | Version created | Milestone tracking |
+| Event                                   | Description             | Use Case               |
+| --------------------------------------- | ----------------------- | ---------------------- |
+| `onshape.model.lifecycle.changed`       | Model/assembly modified | Trigger BOM diff check |
+| `onshape.model.translation.complete`    | Export completed        | Not needed for BOM     |
+| `onshape.revision.created`              | New revision created    | Track formal releases  |
+| `onshape.model.lifecycle.metadata`      | Properties modified     | Part info updated      |
+| `onshape.model.lifecycle.createversion` | Version created         | Milestone tracking     |
 
 **Primary Event:** `onshape.model.lifecycle.changed` — This fires whenever the assembly is modified, allowing us to detect new parts, removed parts, or quantity changes.
 
@@ -169,6 +181,7 @@ OnShape webhooks enable real-time notifications when documents change.
 #### Webhook Payload
 
 When a model changes, OnShape sends:
+
 ```json
 {
   "event": "onshape.model.lifecycle.changed",
@@ -193,6 +206,7 @@ When a model changes, OnShape sends:
 OnShape provides a reference BOM application: [github.com/onshape-public/app-bom](https://github.com/onshape-public/app-bom)
 
 This Node.js application demonstrates:
+
 - OAuth2 authentication flow
 - Assembly navigation
 - BOM data retrieval
@@ -204,7 +218,7 @@ This Node.js application demonstrates:
 Official TypeScript client library: [github.com/onshape-public/onshape-ts-client](https://github.com/onshape-public/onshape-ts-client)
 
 ```typescript
-import { OnshapeClient } from '@onshape/onshape-ts-client';
+import { OnshapeClient } from "@onshape/onshape-ts-client";
 
 const client = new OnshapeClient({
   accessKey: process.env.ONSHAPE_ACCESS_KEY,
@@ -214,7 +228,7 @@ const client = new OnshapeClient({
 // Get BOM for assembly
 const bom = await client.assemblies.getBillOfMaterials({
   did: documentId,
-  wvm: 'w',
+  wvm: "w",
   wvmid: workspaceId,
   eid: elementId,
 });
@@ -230,17 +244,18 @@ const bom = await client.assemblies.getBillOfMaterials({
 
 #### OpenBOM Features
 
-| Feature | Description | BuildSeason Relevance |
-|---------|-------------|----------------------|
-| Bi-directional sync | Changes flow both ways | Could sync part properties |
-| Part catalogs | Managed vendor databases | Reference for part matching |
-| Multi-level BOMs | Hierarchical structure | Map to subsystems |
-| Inventory tracking | Quantity on hand | Could synchronize with our inventory |
-| CAD integrations | OnShape, Fusion, SolidWorks | One solution spans platforms |
+| Feature             | Description                 | BuildSeason Relevance                |
+| ------------------- | --------------------------- | ------------------------------------ |
+| Bi-directional sync | Changes flow both ways      | Could sync part properties           |
+| Part catalogs       | Managed vendor databases    | Reference for part matching          |
+| Multi-level BOMs    | Hierarchical structure      | Map to subsystems                    |
+| Inventory tracking  | Quantity on hand            | Could synchronize with our inventory |
+| CAD integrations    | OnShape, Fusion, SolidWorks | One solution spans platforms         |
 
 #### OpenBOM API
 
 OpenBOM provides a REST API that could be used as an intermediary:
+
 ```
 - Part catalog management
 - BOM export/import
@@ -251,11 +266,13 @@ OpenBOM provides a REST API that could be used as an intermediary:
 #### Integration Options
 
 **Option A: Direct OnShape Integration (Recommended)**
+
 - BuildSeason connects directly to OnShape API
 - Full control over data flow and caching
 - No third-party dependency
 
 **Option B: OpenBOM as Middleware**
+
 - Teams use OpenBOM for BOM management
 - BuildSeason syncs from OpenBOM
 - Leverages OpenBOM's existing integrations
@@ -269,13 +286,13 @@ OpenBOM provides a REST API that could be used as an intermediary:
 
 #### FRCBOM Features (Learning from Community)
 
-| Feature | Implementation | BuildSeason Insight |
-|---------|---------------|---------------------|
-| Custom FeatureScript | Assigns manufacturing processes | Could track fabrication status |
-| Live collaboration | Real-time updates | Already in our architecture |
-| 3D viewer | In-browser preview | Nice-to-have, not core |
-| Process tracking | Pre-process, Process 1, Process 2 | Map to our subsystem status |
-| CAD file download | Export from OnShape | Useful for documentation |
+| Feature              | Implementation                    | BuildSeason Insight            |
+| -------------------- | --------------------------------- | ------------------------------ |
+| Custom FeatureScript | Assigns manufacturing processes   | Could track fabrication status |
+| Live collaboration   | Real-time updates                 | Already in our architecture    |
+| 3D viewer            | In-browser preview                | Nice-to-have, not core         |
+| Process tracking     | Pre-process, Process 1, Process 2 | Map to our subsystem status    |
+| CAD file download    | Export from OnShape               | Useful for documentation       |
 
 #### Key Lessons from FRCBOM
 
@@ -311,13 +328,13 @@ Autodesk Fusion 360 is popular with some robotics teams, especially those with A
 
 #### Key Differences from OnShape
 
-| Aspect | OnShape | Fusion 360 |
-|--------|---------|------------|
-| Architecture | Cloud-native | Desktop app with cloud sync |
-| API Type | REST API | Python/C++ add-ins |
-| Real-time updates | Webhooks | Must poll or use add-in |
-| BOM Access | Direct REST endpoint | Via add-in or Fusion Manage |
-| Auth | OAuth2 | Forge (Autodesk Platform Services) |
+| Aspect            | OnShape              | Fusion 360                         |
+| ----------------- | -------------------- | ---------------------------------- |
+| Architecture      | Cloud-native         | Desktop app with cloud sync        |
+| API Type          | REST API             | Python/C++ add-ins                 |
+| Real-time updates | Webhooks             | Must poll or use add-in            |
+| BOM Access        | Direct REST endpoint | Via add-in or Fusion Manage        |
+| Auth              | OAuth2               | Forge (Autodesk Platform Services) |
 
 ### 3.2 Fusion 360 API Approach
 
@@ -345,16 +362,19 @@ def run(context):
 ### 3.3 Fusion 360 Integration Strategy
 
 **Option A: OpenBOM Add-in (Recommended)**
+
 - Teams install OpenBOM add-in for Fusion 360
 - BuildSeason syncs from OpenBOM
 - Consistent experience across CAD platforms
 
 **Option B: Custom Add-in**
+
 - Develop Fusion 360 add-in that exports BOM
 - Send data to BuildSeason API
 - More control but significant development effort
 
 **Option C: Manual Export**
+
 - Students export BOM to CSV from Fusion 360
 - Upload CSV to BuildSeason
 - Lowest barrier, highest friction
@@ -388,26 +408,29 @@ SolidWorks is the industry standard for professional CAD but less common in FTC 
 
 #### Architecture Considerations
 
-| Aspect | Description |
-|--------|-------------|
-| Installation | Desktop application (Windows only) |
+| Aspect          | Description                               |
+| --------------- | ----------------------------------------- |
+| Installation    | Desktop application (Windows only)        |
 | Data Management | SOLIDWORKS PDM (optional) or 3DEXPERIENCE |
-| API | COM-based (Windows) or PDM API |
-| BOM Export | XML export to ERP systems |
+| API             | COM-based (Windows) or PDM API            |
+| BOM Export      | XML export to ERP systems                 |
 
 ### 4.2 Integration Options
 
 **Option A: OpenBOM Integration (Recommended)**
+
 - OpenBOM has deep SolidWorks integration
 - Works with or without PDM
 - Automatic BOM sync on save
 
 **Option B: PDM XML Export**
+
 - Configure PDM to export BOM on release
 - BuildSeason imports XML files
 - Batch processing, not real-time
 
 **Option C: 3DEXPERIENCE Platform**
+
 - Dassault's cloud platform
 - More modern API
 - Requires 3DEXPERIENCE license
@@ -431,6 +454,7 @@ This endpoint returns BOM data in structured format suitable for ERP integration
 The core challenge: matching CAD part references to purchasable vendor parts.
 
 **Example:**
+
 - OnShape assembly contains: "HD Hex Motor"
 - Need to match to: REV-41-1301 at $24.99 from revrobotics.com
 
@@ -439,6 +463,7 @@ The core challenge: matching CAD part references to purchasable vendor parts.
 #### Strategy 1: Part Number in CAD Properties (Preferred)
 
 Teams configure OnShape parts with vendor SKUs:
+
 ```
 Part Name: "HD Hex Motor"
 Part Number: "REV-41-1301"
@@ -450,14 +475,15 @@ BuildSeason matches on `Part Number` field directly.
 #### Strategy 2: Fuzzy Name Matching
 
 Use string similarity to match part names:
+
 ```typescript
 function matchPart(cadPartName: string, vendorCatalog: Part[]): Part[] {
   return vendorCatalog
-    .map(p => ({
+    .map((p) => ({
       part: p,
-      score: stringSimilarity(cadPartName, p.name)
+      score: stringSimilarity(cadPartName, p.name),
     }))
-    .filter(m => m.score > 0.7)
+    .filter((m) => m.score > 0.7)
     .sort((a, b) => b.score - a.score);
 }
 ```
@@ -465,6 +491,7 @@ function matchPart(cadPartName: string, vendorCatalog: Part[]): Part[] {
 #### Strategy 3: Team-Defined Mappings
 
 Teams create explicit mappings:
+
 ```typescript
 partMappings: {
   "HD Hex Motor": "REV-41-1301",
@@ -478,31 +505,31 @@ partMappings: {
 ```typescript
 vendorCatalogItems: {
   id: string;
-  vendorId: string;              // FK to vendors
-  sku: string;                   // "REV-41-1301"
-  name: string;                  // "HD Hex Motor"
+  vendorId: string; // FK to vendors
+  sku: string; // "REV-41-1301"
+  name: string; // "HD Hex Motor"
   description: string;
-  category: string;              // "Motors", "Wheels"
-  priceCents: number;            // 2499 ($24.99)
+  category: string; // "Motors", "Wheels"
+  priceCents: number; // 2499 ($24.99)
   inStock: boolean;
-  stockLevel: 'in-stock' | 'low-stock' | 'out-of-stock' | 'discontinued';
-  leadTimeDays: number;          // Estimated if out of stock
-  specs: Record<string, any>;    // Dimensions, voltage, etc.
+  stockLevel: "in-stock" | "low-stock" | "out-of-stock" | "discontinued";
+  leadTimeDays: number; // Estimated if out of stock
+  specs: Record<string, any>; // Dimensions, voltage, etc.
   imageUrl: string;
-  productUrl: string;            // Deep link to vendor page
+  productUrl: string; // Deep link to vendor page
   lastScrapedAt: Date;
 }
 ```
 
 ### 5.4 Vendor Data Sources
 
-| Vendor | Data Source | Update Strategy |
-|--------|-------------|-----------------|
-| REV Robotics | Website scraping | Daily sync |
-| goBILDA | Website scraping | Daily sync |
-| AndyMark | Website scraping | Daily sync |
-| ServoCity | Website scraping | Daily sync |
-| McMaster-Carr | Not included (catalog too large) | N/A |
+| Vendor        | Data Source                      | Update Strategy |
+| ------------- | -------------------------------- | --------------- |
+| REV Robotics  | Website scraping                 | Daily sync      |
+| goBILDA       | Website scraping                 | Daily sync      |
+| AndyMark      | Website scraping                 | Daily sync      |
+| ServoCity     | Website scraping                 | Daily sync      |
+| McMaster-Carr | Not included (catalog too large) | N/A             |
 
 ---
 
@@ -550,40 +577,44 @@ vendorCatalogItems: {
 
 ```typescript
 // routes/webhooks/onshape.ts
-import { Hono } from 'hono';
-import { verifyOnShapeSignature } from '../lib/onshape';
-import { temporal } from '../lib/temporal';
+import { Hono } from "hono";
+import { verifyOnShapeSignature } from "../lib/onshape";
+import { temporal } from "../lib/temporal";
 
 const app = new Hono();
 
-app.post('/webhooks/onshape', async (c) => {
+app.post("/webhooks/onshape", async (c) => {
   // Verify webhook signature
-  const signature = c.req.header('x-onshape-signature');
+  const signature = c.req.header("x-onshape-signature");
   const body = await c.req.text();
 
-  if (!verifyOnShapeSignature(signature, body, process.env.ONSHAPE_WEBHOOK_SECRET)) {
-    return c.text('Invalid signature', 401);
+  if (
+    !verifyOnShapeSignature(signature, body, process.env.ONSHAPE_WEBHOOK_SECRET)
+  ) {
+    return c.text("Invalid signature", 401);
   }
 
   const payload = JSON.parse(body);
 
   // Handle different event types
-  if (payload.event === 'onshape.model.lifecycle.changed') {
+  if (payload.event === "onshape.model.lifecycle.changed") {
     // Start Temporal workflow for BOM sync
     await temporal.workflow.start(onShapeSyncWorkflow, {
-      args: [{
-        documentId: payload.documentId,
-        workspaceId: payload.workspaceId,
-        elementId: payload.elementId,
-        changedBy: payload.userId,
-        timestamp: payload.timestamp,
-      }],
-      taskQueue: 'onshape-sync',
+      args: [
+        {
+          documentId: payload.documentId,
+          workspaceId: payload.workspaceId,
+          elementId: payload.elementId,
+          changedBy: payload.userId,
+          timestamp: payload.timestamp,
+        },
+      ],
+      taskQueue: "onshape-sync",
       workflowId: `onshape-sync-${payload.documentId}-${Date.now()}`,
     });
   }
 
-  return c.text('OK');
+  return c.text("OK");
 });
 ```
 
@@ -591,8 +622,8 @@ app.post('/webhooks/onshape', async (c) => {
 
 ```typescript
 // workflows/onshapeSync.ts
-import { proxyActivities } from '@temporalio/workflow';
-import type * as activities from '../activities/onshape';
+import { proxyActivities } from "@temporalio/workflow";
+import type * as activities from "../activities/onshape";
 
 const {
   fetchCurrentBOM,
@@ -604,7 +635,7 @@ const {
   saveBOMSnapshot,
   notifyTeam,
 } = proxyActivities<typeof activities>({
-  startToCloseTimeout: '5 minutes',
+  startToCloseTimeout: "5 minutes",
 });
 
 interface OnShapeSyncInput {
@@ -615,11 +646,13 @@ interface OnShapeSyncInput {
   timestamp: string;
 }
 
-export async function onShapeSyncWorkflow(input: OnShapeSyncInput): Promise<void> {
+export async function onShapeSyncWorkflow(
+  input: OnShapeSyncInput
+): Promise<void> {
   // 1. Get team from OnShape connection
   const connection = await getOnShapeConnection(input.documentId);
   if (!connection) {
-    console.log('No BuildSeason team connected to this document');
+    console.log("No BuildSeason team connected to this document");
     return;
   }
 
@@ -631,7 +664,10 @@ export async function onShapeSyncWorkflow(input: OnShapeSyncInput): Promise<void
   });
 
   // 3. Get previous BOM snapshot
-  const previousBOM = await fetchPreviousBOMSnapshot(connection.teamId, input.documentId);
+  const previousBOM = await fetchPreviousBOMSnapshot(
+    connection.teamId,
+    input.documentId
+  );
 
   // 4. Calculate diff
   const diff = await calculateBOMDiff(previousBOM, currentBOM);
@@ -643,10 +679,15 @@ export async function onShapeSyncWorkflow(input: OnShapeSyncInput): Promise<void
   }
 
   // 5. Cross-reference with team inventory
-  const inventoryStatus = await crossReferenceInventory(connection.teamId, diff);
+  const inventoryStatus = await crossReferenceInventory(
+    connection.teamId,
+    diff
+  );
 
   // 6. Check vendor availability for missing parts
-  const availability = await checkVendorAvailability(inventoryStatus.missingParts);
+  const availability = await checkVendorAvailability(
+    inventoryStatus.missingParts
+  );
 
   // 7. Calculate lead times against competition dates
   const leadTimeAnalysis = await calculateLeadTimes(
@@ -707,12 +748,12 @@ export function calculateBOMDiff(
     };
   }
 
-  const previousMap = new Map(previous.map(p => [p.partNumber, p]));
-  const currentMap = new Map(current.map(p => [p.partNumber, p]));
+  const previousMap = new Map(previous.map((p) => [p.partNumber, p]));
+  const currentMap = new Map(current.map((p) => [p.partNumber, p]));
 
   const added: BOMItem[] = [];
   const removed: BOMItem[] = [];
-  const quantityChanged: BOMDiff['quantityChanged'] = [];
+  const quantityChanged: BOMDiff["quantityChanged"] = [];
 
   // Find added and quantity changed
   for (const [partNumber, item] of currentMap) {
@@ -736,7 +777,8 @@ export function calculateBOMDiff(
   }
 
   return {
-    hasChanges: added.length > 0 || removed.length > 0 || quantityChanged.length > 0,
+    hasChanges:
+      added.length > 0 || removed.length > 0 || quantityChanged.length > 0,
     added,
     removed,
     quantityChanged,
@@ -768,7 +810,7 @@ export async function notifyTeam(data: NotificationData): Promise<void> {
 
   // Get user who made changes
   const user = await getUserFromOnShapeId(changedBy);
-  const userName = user?.name || 'Someone';
+  const userName = user?.name || "Someone";
 
   // Build notification message
   let message = `Hey ${userName}, I noticed you updated the assembly. Here's what changed:\n\n`;
@@ -801,7 +843,7 @@ export async function notifyTeam(data: NotificationData): Promise<void> {
     message += `**Quantity changes:**\n`;
     for (const change of diff.quantityChanged) {
       const delta = change.newQuantity - change.previousQuantity;
-      const direction = delta > 0 ? '⬆️' : '⬇️';
+      const direction = delta > 0 ? "⬆️" : "⬇️";
       message += `• ${change.part.name}: ${change.previousQuantity} → ${change.newQuantity} ${direction}\n`;
     }
     message += `\n`;
@@ -818,7 +860,9 @@ export async function notifyTeam(data: NotificationData): Promise<void> {
   }
 
   // Action buttons
-  if (diff.added.some(p => !inventoryStatus.parts.get(p.partNumber)?.inStock)) {
+  if (
+    diff.added.some((p) => !inventoryStatus.parts.get(p.partNumber)?.inStock)
+  ) {
     message += `React ✅ to add missing parts to order queue.`;
   }
 
@@ -928,7 +972,7 @@ part_mappings (
 ### 8.2 Webhook Security
 
 ```typescript
-import crypto from 'crypto';
+import crypto from "crypto";
 
 export function verifyOnShapeSignature(
   signature: string | null,
@@ -938,14 +982,11 @@ export function verifyOnShapeSignature(
   if (!signature) return false;
 
   const expected = crypto
-    .createHmac('sha256', secret)
+    .createHmac("sha256", secret)
     .update(body)
-    .digest('base64');
+    .digest("base64");
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected)
-  );
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 ```
 
@@ -965,6 +1006,7 @@ export function verifyOnShapeSignature(
 **Goal:** Manual BOM import with inventory cross-reference
 
 **Features:**
+
 - [ ] OAuth2 connection flow
 - [ ] Manual "Sync BOM" button
 - [ ] BOM display in BuildSeason UI
@@ -978,6 +1020,7 @@ export function verifyOnShapeSignature(
 **Goal:** Automatic BOM updates when OnShape changes
 
 **Features:**
+
 - [ ] Webhook registration per team
 - [ ] Background BOM sync via Temporal workflow
 - [ ] BOM diff calculation and storage
@@ -991,6 +1034,7 @@ export function verifyOnShapeSignature(
 **Goal:** Smart matching of CAD parts to vendor catalog
 
 **Features:**
+
 - [ ] Fuzzy name matching algorithm
 - [ ] Team-defined part mappings
 - [ ] "Suggested match" UI for ambiguous parts
@@ -1004,6 +1048,7 @@ export function verifyOnShapeSignature(
 **Goal:** Support Fusion 360 and SolidWorks teams
 
 **Features:**
+
 - [ ] OpenBOM integration as middleware
 - [ ] CSV import for manual workflows
 - [ ] Fusion 360 export documentation
@@ -1016,6 +1061,7 @@ export function verifyOnShapeSignature(
 **Goal:** Community intelligence and predictions
 
 **Features:**
+
 - [ ] "Teams who buy X also buy Y" suggestions
 - [ ] Vendor stock monitoring
 - [ ] Proactive restock alerts
@@ -1029,60 +1075,64 @@ export function verifyOnShapeSignature(
 
 ### Authentication Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/oauth/authorize` | GET | Start OAuth flow |
-| `/oauth/token` | POST | Exchange code for tokens |
-| `/oauth/token` | POST | Refresh access token |
+| Endpoint           | Method | Description              |
+| ------------------ | ------ | ------------------------ |
+| `/oauth/authorize` | GET    | Start OAuth flow         |
+| `/oauth/token`     | POST   | Exchange code for tokens |
+| `/oauth/token`     | POST   | Refresh access token     |
 
 ### Assembly Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/assemblies/d/{did}/{wvm}/{wvmid}/e/{eid}/bom` | GET | Get assembly BOM |
-| `/api/assemblies/d/{did}/{wvm}/{wvmid}/e/{eid}` | GET | Get assembly metadata |
+| Endpoint                                            | Method | Description           |
+| --------------------------------------------------- | ------ | --------------------- |
+| `/api/assemblies/d/{did}/{wvm}/{wvmid}/e/{eid}/bom` | GET    | Get assembly BOM      |
+| `/api/assemblies/d/{did}/{wvm}/{wvmid}/e/{eid}`     | GET    | Get assembly metadata |
 
 ### Webhook Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/webhooks` | POST | Register webhook |
+| Endpoint                    | Method | Description        |
+| --------------------------- | ------ | ------------------ |
+| `/api/webhooks`             | POST   | Register webhook   |
 | `/api/webhooks/{webhookId}` | DELETE | Unregister webhook |
-| `/api/webhooks` | GET | List webhooks |
+| `/api/webhooks`             | GET    | List webhooks      |
 
 ### Document Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/documents` | GET | List accessible documents |
-| `/api/documents/{did}` | GET | Get document metadata |
-| `/api/documents/{did}/elements` | GET | List elements (tabs) |
+| Endpoint                        | Method | Description               |
+| ------------------------------- | ------ | ------------------------- |
+| `/api/documents`                | GET    | List accessible documents |
+| `/api/documents/{did}`          | GET    | Get document metadata     |
+| `/api/documents/{did}/elements` | GET    | List elements (tabs)      |
 
 ---
 
 ## Appendix B: References
 
 ### Official Documentation
+
 - [OnShape Developer Portal](https://dev-portal.onshape.com/)
 - [OnShape API Documentation](https://onshape-public.github.io/docs/)
 - [OnShape Webhook Documentation](https://onshape-public.github.io/docs/webhook/)
 - [OnShape OAuth Guide](https://onshape-public.github.io/docs/auth/oauth/)
 
 ### Sample Applications
+
 - [OnShape BOM App (GitHub)](https://github.com/onshape-public/app-bom)
 - [OnShape TypeScript Client](https://github.com/onshape-public/onshape-ts-client)
 - [FRCBOM Documentation](https://docs.frcbom.com/)
 
 ### Third-Party Integrations
+
 - [OpenBOM for OnShape](https://www.openbom.com/integrations)
 - [OpenBOM for Fusion 360](https://www.openbom.com/openbom-add-in-for-autodesk-fusion-360)
 - [OpenBOM for SolidWorks](https://www.openbom.com/openbom-for-solidworks)
 
 ### Community Resources
+
 - [Chief Delphi - FRCBOM Discussion](https://www.chiefdelphi.com/t/introducing-again-frcbom-com-a-bom-and-manufacturing-dashboard-for-teams-using-onshape-api/505737)
 - [Game Manual 0 - Useful Resources](https://gm0.org/en/latest/docs/useful-resources.html)
 - [FRCDesign.org](https://www.frcdesign.org/)
 
 ---
 
-*This specification will evolve as we implement and learn from user feedback.*
+_This specification will evolve as we implement and learn from user feedback._

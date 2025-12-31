@@ -1,10 +1,13 @@
 # BuildSeason
+
 ## UI/UX Design Specification
 
 **Version:** 1.0
 **Date:** December 29, 2025
 **Status:** Draft
-**Companion Documents:** [requirements.md](./requirements.md), [specification.md](./specification.md)
+**Companion Documents:** [requirements.md](./requirements.md), [specification.md](./specification.md), [ui-refocus-spec.md](./ui-refocus-spec.md)
+
+> **⚠️ Important:** The Information Architecture (Section 2) and Page Specifications (Section 5) in this document have been superseded by [ui-refocus-spec.md](./ui-refocus-spec.md), which expands BuildSeason to a holistic team management platform. **Refer to this document for:** design system, personas, user journeys, accessibility requirements, and responsive strategy.
 
 ---
 
@@ -13,6 +16,7 @@
 This document specifies the user interface and user experience design for BuildSeason. It complements the technical specification (HOW to build) and requirements (WHAT to build) by defining HOW users will experience the product.
 
 **Key Design Principles:**
+
 1. **GitHub-Style Dual Experience** — Marketing site for unauthenticated users, dashboard for authenticated users
 2. **Discord-First, Web-Second** — The Discord agent is primary; web is the "back office"
 3. **Multi-Team Native** — Users can belong to multiple teams; the UI reflects this naturally
@@ -20,6 +24,7 @@ This document specifies the user interface and user experience design for BuildS
 5. **Progressive Disclosure** — Show what's needed, when it's needed
 
 **Target Users:**
+
 - Students (13-18) — Discord natives, want quick, fun interactions; may be on multiple teams
 - Mentors — Time-strapped volunteers, need efficient dashboards; often coach multiple teams
 - Parents — Limited access, focused on their child's involvement; may have kids on multiple teams
@@ -27,6 +32,7 @@ This document specifies the user interface and user experience design for BuildS
 
 **Multi-Team Reality:**
 A core assumption: users frequently belong to multiple teams simultaneously:
+
 - Pete was on two FTC teams last year (Aperture Science and Cosmic Brownies)
 - Marcus mentors both Aperture Science and Sigmacorns
 - Mrs. Denning's son is on two teams; she needs to sign permission forms for both
@@ -56,12 +62,14 @@ A core assumption: users frequently belong to multiple teams simultaneously:
 BuildSeason users operate in two distinct mental models:
 
 **Discord Mode (Primary for Students)**
+
 - Conversational, interrupt-driven
 - Quick queries and responses
 - Social context (team channels)
 - Notification-based engagement
 
 **Web Mode (Primary for Mentors/Admins)**
+
 - Dashboard-driven, focused work
 - Batch operations (review orders, manage inventory)
 - Report generation and export
@@ -71,22 +79,24 @@ The web experience should complement Discord, not compete with it.
 
 ### 1.2 Key User Behaviors
 
-| User Type | Primary Interface | Web Usage | Key Tasks |
-|-----------|------------------|-----------|-----------|
-| Students | Discord | Occasional | Update inventory, check BOM, view orders |
-| Mentors | 50/50 | Regular | Approve orders, manage budget, track progress |
-| Parents | Web only | Rare | Sign forms, update emergency info |
-| Admins | Web primary | Daily | All management tasks |
+| User Type | Primary Interface | Web Usage  | Key Tasks                                     |
+| --------- | ----------------- | ---------- | --------------------------------------------- |
+| Students  | Discord           | Occasional | Update inventory, check BOM, view orders      |
+| Mentors   | 50/50             | Regular    | Approve orders, manage budget, track progress |
+| Parents   | Web only          | Rare       | Sign forms, update emergency info             |
+| Admins    | Web primary       | Daily      | All management tasks                          |
 
 ### 1.3 Competition Context
 
 Users often access BuildSeason at:
+
 - **Shop/Lab** — Desktop, good connectivity
 - **Competition venues** — Mobile, unreliable WiFi
 - **Home** — Mix of devices
 - **Outreach events** — Mobile, often offline
 
 This demands:
+
 - Offline-capable critical features (inventory lookup, contact info)
 - Mobile-first for competition day views
 - Fast load times (venue WiFi is terrible)
@@ -231,6 +241,7 @@ Following the specification, URLs use **team numbers as identity** (no UUIDs):
 ```
 
 **URL Rules:**
+
 1. Team context always includes `program` and `number`
 2. No database IDs in URLs (use slugs or meaningful identifiers)
 3. Public pages accessible without auth
@@ -243,21 +254,25 @@ Following the specification, URLs use **team numbers as identity** (no UUIDs):
 ### 3.1 Sofia — The Engaged Student
 
 **Demographics:**
+
 - 16 years old, junior
 - FTC team member for 2 years
 - Lead of mechanical subsystem
 
 **Goals:**
+
 - Check if parts are in stock quickly
 - Know when ordered parts arrive
 - Feel ownership over "her" subsystem
 
 **Pain Points:**
+
 - Hates checking email
 - Forgets to update shared spreadsheets
 - Gets frustrated when parts are missing on build day
 
 **Key Behaviors:**
+
 - Lives in Discord
 - Checks phone constantly
 - Will ignore web apps but responds to @mentions
@@ -266,28 +281,32 @@ Following the specification, URLs use **team numbers as identity** (no UUIDs):
 **Primary Interface:** Discord
 **Web Usage:** Weekly, usually on laptop at shop
 
-**Quote:** *"Just tell me if we have the parts. I don't want to click through menus."*
+**Quote:** _"Just tell me if we have the parts. I don't want to click through menus."_
 
 ---
 
 ### 3.1b Pete — The Multi-Team Student
 
 **Demographics:**
+
 - 17 years old, senior
 - On two FTC teams simultaneously (Aperture Science and Cosmic Brownies)
 - Strong programmer, helps both teams with code
 
 **Goals:**
+
 - Contribute to both teams without confusion
 - Keep track of which parts are where
 - Not miss deadlines for either team
 
 **Pain Points:**
+
 - Parts get mixed up between teams
 - Meetings overlap, hard to track schedule
 - Discord channels from both teams flood notifications
 
 **Key Behaviors:**
+
 - Switches between team contexts frequently
 - Uses team-specific Discord channels
 - Needs clear separation of team inventories and BOMs
@@ -295,30 +314,34 @@ Following the specification, URLs use **team numbers as identity** (no UUIDs):
 **Primary Interface:** Discord
 **Web Usage:** Occasional, usually on phone
 
-**Quote:** *"Wait, do WE have those servos, or does the other team?"*
+**Quote:** _"Wait, do WE have those servos, or does the other team?"_
 
 ---
 
 ### 3.2 Coach Marcus — The Time-Strapped Mentor
 
 **Demographics:**
+
 - 38 years old, software engineer
 - Volunteers 10-15 hours/week
 - Coaches 2 FTC teams (Aperture Science and Sigmacorns)
 
 **Goals:**
+
 - Approve orders quickly across both teams
 - Know what's running low before it's urgent on either team
 - Spend time with students, not spreadsheets
 - See at-a-glance status of both teams
 
 **Pain Points:**
+
 - Too many tabs open (especially juggling two teams)
 - Chasing students for updates
 - Missing context when making decisions
 - Losing track of which team is which in notifications
 
 **Key Behaviors:**
+
 - Checks BuildSeason on commute (mobile)
 - Does batch approvals on weekends—sometimes for both teams at once
 - Wants notifications grouped by team or aggregated (configurable)
@@ -327,28 +350,32 @@ Following the specification, URLs use **team numbers as identity** (no UUIDs):
 **Primary Interface:** 50/50 Discord/Web
 **Web Usage:** Daily, quick checks on mobile, batch work on desktop
 
-**Quote:** *"I have 10 minutes between meetings. Show me what needs my attention—on both teams."*
+**Quote:** _"I have 10 minutes between meetings. Show me what needs my attention—on both teams."_
 
 ---
 
 ### 3.3 Mrs. Chen — The Parent Chaperone
 
 **Demographics:**
+
 - 45 years old, parent of student on team
 - Occasionally chaperones events
 - Not tech-savvy
 
 **Goals:**
+
 - Sign permission forms
 - Know when events are happening
 - Reach the coach in emergencies
 
 **Pain Points:**
+
 - Too many apps and logins
 - Doesn't understand robotics terminology
 - Worries about child's safety at events
 
 **Key Behaviors:**
+
 - Uses email primarily
 - Only logs in when specifically asked
 - Prefers simple, clear instructions
@@ -356,28 +383,32 @@ Following the specification, URLs use **team numbers as identity** (no UUIDs):
 **Primary Interface:** Email notifications → Web
 **Web Usage:** Monthly, only when action needed
 
-**Quote:** *"Just tell me what to sign and when to pick up my kid."*
+**Quote:** _"Just tell me what to sign and when to pick up my kid."_
 
 ---
 
 ### 3.3b Mrs. Denning — Parent with Multi-Team Child
 
 **Demographics:**
+
 - 42 years old, parent of Pete (who is on TWO teams)
 - Works full-time, limited availability
 - Comfortable with tech but wants efficiency
 
 **Goals:**
+
 - Sign permission forms for BOTH of Pete's teams
 - Understand which event is for which team
 - One login, see everything about Pete's robotics
 
 **Pain Points:**
+
 - Confused when two events are on same weekend for different teams
 - Gets notifications from both teams—hard to track
 - Worried about over-committing Pete
 
 **Key Behaviors:**
+
 - Prefers a unified view: "Pete's upcoming events" regardless of team
 - Needs clear team labels on everything
 - Uses calendar sync if available
@@ -385,28 +416,32 @@ Following the specification, URLs use **team numbers as identity** (no UUIDs):
 **Primary Interface:** Email notifications → Web
 **Web Usage:** Weekly during competition season
 
-**Quote:** *"Pete's on two teams? Great. But I need ONE place to see all his stuff."*
+**Quote:** _"Pete's on two teams? Great. But I need ONE place to see all his stuff."_
 
 ---
 
 ### 3.4 Mr. Rodriguez — The Head Coach/Admin
 
 **Demographics:**
+
 - 52 years old, school teacher
 - Head coach, manages all team operations
 - Handles budget and sponsor relations
 
 **Goals:**
+
 - Full visibility into all team operations
 - Generate reports for sponsors
 - Manage mentor access and roles
 
 **Pain Points:**
+
 - Tracking spending across multiple vendors
 - Knowing what was approved and when
 - Communicating with parents efficiently
 
 **Key Behaviors:**
+
 - Heavy web user
 - Checks dashboard daily
 - Exports data for school administration
@@ -415,7 +450,7 @@ Following the specification, URLs use **team numbers as identity** (no UUIDs):
 **Primary Interface:** Web (primary), Discord (monitoring)
 **Web Usage:** Daily, extended sessions
 
-**Quote:** *"I need to know everything, but I don't need to do everything."*
+**Quote:** _"I need to know everything, but I don't need to do everything."_
 
 ---
 
@@ -657,6 +692,7 @@ DESIGN NOTES:
 **Purpose:** Convert visitors to signups
 
 **Layout Structure:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ NAVIGATION                                                               │
@@ -712,6 +748,7 @@ DESIGN NOTES:
 ```
 
 **Key Elements:**
+
 - Clear value proposition in hero (not feature list)
 - Demo video or interactive preview
 - Testimonials from real teams
@@ -725,6 +762,7 @@ DESIGN NOTES:
 **Purpose:** Showcase team, enable discovery, encourage signups
 
 **Layout Structure:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ NAVIGATION (Marketing Nav, not dashboard)                               │
@@ -766,6 +804,7 @@ DESIGN NOTES:
 ```
 
 **Key Elements:**
+
 - Team branding (logo, colors if provided)
 - Public info only (no inventory, orders, budget)
 - Integration with FTC Stats/FIRST API for competition data
@@ -782,6 +821,7 @@ DESIGN NOTES:
 **Purpose:** Landing pad after login, quick status and navigation
 
 **Layout Structure:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ HEADER                                                                   │
@@ -824,6 +864,7 @@ DESIGN NOTES:
 ```
 
 **Key Elements:**
+
 - Persistent team switcher in header
 - Collapsible sidebar navigation
 - Alert-first design (pending approvals, low stock, deadlines)
@@ -837,6 +878,7 @@ DESIGN NOTES:
 **Purpose:** View, search, and manage parts inventory
 
 **Layout Structure:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ HEADER + TEAM SWITCHER (persistent)                                     │
@@ -867,6 +909,7 @@ DESIGN NOTES:
 ```
 
 **Table Interactions:**
+
 - Click row → Part detail page
 - Inline edit for quantity (quick update)
 - Bulk select for operations
@@ -875,6 +918,7 @@ DESIGN NOTES:
 
 **Smart Search with Vendor Catalog Autocomplete:**
 When typing in the search box or "Add Part" form, autocomplete from the vendor catalog:
+
 ```
 User types: "REV-41-13"
 
@@ -888,11 +932,13 @@ User types: "REV-41-13"
 │ REV-41-1301  HD Hex Motor                    Qty: 8  Shelf A-3  │
 └────────────────────────────────────────────────────────────────┘
 ```
+
 - One-click to add catalog item (pre-fills name, SKU, price, image)
 - Shows current vendor stock status and price
 - "Teams also buy" suggestions when adding items
 
 **Part Detail Page** (`/team/:program/:number/parts/:partId`):
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ ← Back to Parts                                              [Edit]     │
@@ -934,6 +980,7 @@ User types: "REV-41-13"
 **Purpose:** Track and manage orders through lifecycle
 
 **List View:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Orders                                                [+ New Order]     │
@@ -991,6 +1038,7 @@ User types: "REV-41-13"
 **Key Concept:** A team builds multiple robots per season. Each robot has its own name and BOM.
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Robots (2024-2025 Into The Deep)                      [+ New Robot]     │
@@ -1025,6 +1073,7 @@ User types: "REV-41-13"
 ```
 
 **Robot Card:**
+
 - Robot name (prominently displayed)
 - Description (competition, practice, prototype)
 - Status badge (planning, building, competition_ready, disassembled)
@@ -1047,6 +1096,7 @@ User types: "REV-41-13"
 **Purpose:** Define parts needed for a specific robot, compare against team inventory
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ ← Back to Robots                                                         │
@@ -1088,11 +1138,13 @@ User types: "REV-41-13"
 ```
 
 **Key Concepts:**
+
 - **Needed**: How many parts this robot's BOM requires
 - **Allocated**: How many parts have been pulled from inventory for this robot
 - **In Stock**: How many unallocated parts remain in team inventory
 
 **Key Features:**
+
 - Group by subsystem with collapsible sections
 - Three-way comparison: needed vs allocated vs in-stock
 - "Allocate Parts" pulls from inventory to this robot's BOM
@@ -1102,6 +1154,7 @@ User types: "REV-41-13"
 
 **Disassemble Robot Flow:**
 When a robot is disassembled:
+
 1. Confirm action with dialog
 2. All allocated parts return to team inventory
 3. Robot status changes to "disassembled"
@@ -1115,6 +1168,7 @@ When a robot is disassembled:
 **Purpose:** Manage team membership and roles
 
 **Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Team Members                                         [+ Invite Member]  │
@@ -1156,6 +1210,7 @@ When a robot is disassembled:
 ```
 
 **Invite Flow:**
+
 ```
 [+ Invite Member]
        │
@@ -1226,6 +1281,7 @@ Parents see a simplified, focused view:
 ```
 
 **Key Principles for Parent View:**
+
 - Minimal navigation (no sidebar)
 - Action-oriented (what do they need to do?)
 - Child-focused (only shows their child's information)
@@ -1240,17 +1296,18 @@ Parents see a simplified, focused view:
 
 We extend shadcn/ui with BuildSeason-specific components:
 
-| Category | Components |
-|----------|------------|
-| **Navigation** | TeamSwitcher, Sidebar, Breadcrumbs |
+| Category         | Components                                           |
+| ---------------- | ---------------------------------------------------- |
+| **Navigation**   | TeamSwitcher, Sidebar, Breadcrumbs                   |
 | **Data Display** | StatsCard, ActivityFeed, StatusBadge, InventoryTable |
-| **Forms** | PartForm, OrderForm, InviteForm |
-| **Feedback** | AlertBanner, EmptyState, LoadingState |
-| **Layout** | DashboardLayout, PublicLayout, ParentLayout |
+| **Forms**        | PartForm, OrderForm, InviteForm                      |
+| **Feedback**     | AlertBanner, EmptyState, LoadingState                |
+| **Layout**       | DashboardLayout, PublicLayout, ParentLayout          |
 
 ### 6.2 BuildSeason-Specific Components
 
 #### TeamSwitcher
+
 ```typescript
 interface TeamSwitcherProps {
   currentTeam: Team;
@@ -1267,6 +1324,7 @@ interface TeamSwitcherProps {
 ```
 
 **Behavior:**
+
 - Dropdown showing all user's teams
 - Shows team number + name
 - Indicates current selection with checkmark
@@ -1274,6 +1332,7 @@ interface TeamSwitcherProps {
 - Persists selection in localStorage
 
 #### StatsCard
+
 ```typescript
 interface StatsCardProps {
   title: string;
@@ -1293,13 +1352,20 @@ interface StatsCardProps {
 ```
 
 #### StatusBadge
+
 ```typescript
-type OrderStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'ordered' | 'received';
-type StockStatus = 'ok' | 'low' | 'out';
+type OrderStatus =
+  | "draft"
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "ordered"
+  | "received";
+type StockStatus = "ok" | "low" | "out";
 
 interface StatusBadgeProps {
   status: OrderStatus | StockStatus;
-  size?: 'sm' | 'md';
+  size?: "sm" | "md";
 }
 ```
 
@@ -1314,6 +1380,7 @@ interface StatusBadgeProps {
 | ordered | blue-100 | blue-800 | 📦 |
 
 #### EmptyState
+
 ```typescript
 interface EmptyStateProps {
   icon: ReactNode;
@@ -1344,38 +1411,42 @@ interface EmptyStateProps {
 ### 7.1 Color Palette
 
 **Brand Colors:**
+
 ```css
---primary: 220 70% 50%;     /* Blue - actions, links */
+--primary: 220 70% 50%; /* Blue - actions, links */
 --primary-foreground: 0 0% 100%;
 
---secondary: 220 14% 96%;   /* Light gray - backgrounds */
+--secondary: 220 14% 96%; /* Light gray - backgrounds */
 --secondary-foreground: 220 9% 46%;
 ```
 
 **Status Colors:**
+
 ```css
---success: 142 76% 36%;     /* Green - ok, approved, complete */
---warning: 38 92% 50%;      /* Yellow/amber - low stock, pending */
---error: 0 84% 60%;         /* Red - out of stock, rejected */
---info: 199 89% 48%;        /* Blue - ordered, in progress */
+--success: 142 76% 36%; /* Green - ok, approved, complete */
+--warning: 38 92% 50%; /* Yellow/amber - low stock, pending */
+--error: 0 84% 60%; /* Red - out of stock, rejected */
+--info: 199 89% 48%; /* Blue - ordered, in progress */
 ```
 
 **Subsystem Colors (for BOM):**
+
 ```css
---drivetrain: 280 65% 60%;  /* Purple */
---intake: 150 60% 45%;      /* Teal */
---lift: 35 100% 50%;        /* Orange */
---scoring: 340 82% 52%;     /* Pink */
+--drivetrain: 280 65% 60%; /* Purple */
+--intake: 150 60% 45%; /* Teal */
+--lift: 35 100% 50%; /* Orange */
+--scoring: 340 82% 52%; /* Pink */
 --electronics: 200 80% 50%; /* Light blue */
---hardware: 45 30% 50%;     /* Brown/tan */
+--hardware: 45 30% 50%; /* Brown/tan */
 ```
 
 ### 7.2 Typography
 
 **Font Stack:**
+
 ```css
---font-sans: 'Inter', system-ui, -apple-system, sans-serif;
---font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+--font-sans: "Inter", system-ui, -apple-system, sans-serif;
+--font-mono: "JetBrains Mono", "Fira Code", monospace;
 ```
 
 **Type Scale:**
@@ -1393,6 +1464,7 @@ interface EmptyStateProps {
 ### 7.3 Spacing System
 
 Based on 4px grid:
+
 ```css
 --space-1: 4px;
 --space-2: 8px;
@@ -1408,21 +1480,21 @@ Based on 4px grid:
 
 ### 7.4 Component Sizing
 
-| Component | Height | Padding |
-|-----------|--------|---------|
-| Button (sm) | 32px | 12px 16px |
-| Button (md) | 40px | 16px 20px |
-| Button (lg) | 48px | 20px 24px |
-| Input | 40px | 12px 16px |
-| Table row | 48px | 16px |
-| Card | auto | 24px |
+| Component   | Height | Padding   |
+| ----------- | ------ | --------- |
+| Button (sm) | 32px   | 12px 16px |
+| Button (md) | 40px   | 16px 20px |
+| Button (lg) | 48px   | 20px 24px |
+| Input       | 40px   | 12px 16px |
+| Table row   | 48px   | 16px      |
+| Card        | auto   | 24px      |
 
 ### 7.5 Elevation/Shadow
 
 ```css
---shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
---shadow-md: 0 4px 6px rgba(0,0,0,0.07);
---shadow-lg: 0 10px 15px rgba(0,0,0,0.10);
+--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
 ```
 
 ---
@@ -1432,32 +1504,38 @@ Based on 4px grid:
 ### 8.1 Navigation Patterns
 
 **Primary Navigation (Sidebar)**
+
 - Always visible on desktop (collapsible)
 - Hidden on mobile, accessible via hamburger
 - Active state clearly indicated
 - Team context persists across navigation
 
 **Secondary Navigation (Tabs)**
+
 - Used for sub-pages within a section
 - Example: Parts page with tabs for "All Parts", "Low Stock", "Recent"
 
 **Breadcrumbs**
+
 - Show for nested pages (e.g., `/team/ftc/5064/parts/abc123`)
 - Format: `Team > Parts > HD Hex Motor`
 
 ### 8.2 Data Loading States
 
 **Skeleton Loading:**
+
 - Show skeleton placeholders matching content shape
 - Animate with subtle pulse
 - Avoid layout shift when content loads
 
 **Empty States:**
+
 - Illustrated empty state for first-time users
 - Clear call-to-action
 - Helpful message explaining what goes here
 
 **Error States:**
+
 - Inline error messages for form validation
 - Toast notifications for transient errors
 - Full-page error for critical failures (with retry)
@@ -1465,16 +1543,19 @@ Based on 4px grid:
 ### 8.3 Form Patterns
 
 **Progressive Disclosure:**
+
 - Show essential fields first
 - "Advanced options" or "More details" expandable
 - Don't overwhelm with fields
 
 **Inline Editing:**
+
 - For quick updates (quantity, location)
 - Click to edit, blur or Enter to save
 - Clear visual indicator of editable fields
 
 **Multi-Step Forms:**
+
 - For complex workflows (create order with multiple items)
 - Progress indicator
 - Save draft capability
@@ -1482,11 +1563,13 @@ Based on 4px grid:
 ### 8.4 Confirmation Patterns
 
 **Destructive Actions:**
+
 - Red button for delete/reject
 - Confirmation dialog with explanation
 - Require typing confirmation for critical deletes
 
 **Approvals:**
+
 - Green for approve, red for reject
 - Inline for quick actions in lists
 - Modal for actions requiring notes
@@ -1494,17 +1577,20 @@ Based on 4px grid:
 ### 8.5 Notification Patterns
 
 **Toast Notifications:**
+
 - Success (green): "Order approved"
 - Error (red): "Failed to save. Try again."
 - Info (blue): "Order shipped - tracking available"
 - Auto-dismiss after 5 seconds (except errors)
 
 **Persistent Alerts:**
+
 - Banner at top of page for important notices
 - Example: "3 orders need your approval"
 - Dismissible but can reappear
 
 **In-context Alerts:**
+
 - Inline with content they reference
 - Example: Stock warning on part card
 
@@ -1515,17 +1601,20 @@ Based on 4px grid:
 ### 9.1 WCAG 2.1 AA Compliance
 
 **Color Contrast:**
+
 - Minimum 4.5:1 for normal text
 - Minimum 3:1 for large text and UI components
 - Don't rely on color alone to convey meaning
 
 **Keyboard Navigation:**
+
 - All interactive elements focusable
 - Visible focus indicators
 - Logical tab order
 - Skip navigation link
 
 **Screen Readers:**
+
 - Semantic HTML structure
 - ARIA labels for icons and non-text elements
 - Announce dynamic content changes
@@ -1533,14 +1622,14 @@ Based on 4px grid:
 
 ### 9.2 Specific Requirements
 
-| Component | Requirement |
-|-----------|-------------|
-| Status badges | Include text, not just color |
-| Icons | Include `aria-label` or accompanying text |
-| Tables | Proper `<th>` headers with scope |
-| Modals | Focus trap, escape to close |
-| Forms | Error messages linked to fields |
-| Images | Alt text (or decorative `alt=""`) |
+| Component     | Requirement                               |
+| ------------- | ----------------------------------------- |
+| Status badges | Include text, not just color              |
+| Icons         | Include `aria-label` or accompanying text |
+| Tables        | Proper `<th>` headers with scope          |
+| Modals        | Focus trap, escape to close               |
+| Forms         | Error messages linked to fields           |
+| Images        | Alt text (or decorative `alt=""`)         |
 
 ### 9.3 Motion
 
@@ -1555,22 +1644,24 @@ Based on 4px grid:
 ### 10.1 Breakpoints
 
 ```css
---mobile: 320px;      /* Minimum supported */
---mobile-lg: 425px;   /* Larger phones */
---tablet: 768px;      /* Tablets, small laptops */
---desktop: 1024px;    /* Standard desktop */
+--mobile: 320px; /* Minimum supported */
+--mobile-lg: 425px; /* Larger phones */
+--tablet: 768px; /* Tablets, small laptops */
+--desktop: 1024px; /* Standard desktop */
 --desktop-lg: 1440px; /* Large monitors */
 ```
 
 ### 10.2 Mobile-First Priorities
 
 **Critical Mobile Features (Competition Day):**
+
 1. Inventory search (find parts quickly)
 2. Order status check
 3. Team contact info
 4. Emergency contacts
 
 **Desktop-Preferred Features:**
+
 - Bulk inventory updates
 - Report generation
 - Complex filtering
@@ -1578,13 +1669,13 @@ Based on 4px grid:
 
 ### 10.3 Responsive Behavior
 
-| Component | Mobile | Tablet | Desktop |
-|-----------|--------|--------|---------|
-| Sidebar | Hidden (hamburger) | Collapsed | Expanded |
-| Tables | Card layout | Horizontal scroll | Full table |
-| Stats cards | 2-column stack | 4-column | 4-column |
-| Team switcher | Full-width dropdown | Compact dropdown | Compact dropdown |
-| Forms | Single column | Two column | Two column |
+| Component     | Mobile              | Tablet            | Desktop          |
+| ------------- | ------------------- | ----------------- | ---------------- |
+| Sidebar       | Hidden (hamburger)  | Collapsed         | Expanded         |
+| Tables        | Card layout         | Horizontal scroll | Full table       |
+| Stats cards   | 2-column stack      | 4-column          | 4-column         |
+| Team switcher | Full-width dropdown | Compact dropdown  | Compact dropdown |
+| Forms         | Single column       | Two column        | Two column       |
 
 ### 10.4 Touch Considerations
 
@@ -1596,12 +1687,14 @@ Based on 4px grid:
 ### 10.5 Offline Support (Phase 2)
 
 **Cache Strategy:**
+
 - Cache recent inventory data
 - Cache team contact information
 - Queue form submissions when offline
 - Sync when connectivity returns
 
 **Offline Indicators:**
+
 - Clear visual indication of offline state
 - Show cached data with "last updated" timestamp
 - Queue actions with "will sync when online" message
@@ -1616,6 +1709,7 @@ Low-fidelity wireframes for key screens are available in:
 ## Appendix B: Prototype Links
 
 Interactive prototypes will be created for:
+
 - [ ] Onboarding flow
 - [ ] Order approval flow (Discord + Web)
 - [ ] Parent permission signing
@@ -1624,6 +1718,7 @@ Interactive prototypes will be created for:
 ## Appendix C: Competitor Analysis
 
 Reference implementations to study:
+
 - **GitHub.com** — Org/repo model, public/private pages
 - **Linear** — Clean dashboard, keyboard navigation
 - **Notion** — Team switching, sidebar navigation
@@ -1633,6 +1728,6 @@ Reference implementations to study:
 
 ## Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-29 | Claude | Initial draft |
+| Version | Date       | Author | Changes       |
+| ------- | ---------- | ------ | ------------- |
+| 1.0     | 2025-12-29 | Claude | Initial draft |

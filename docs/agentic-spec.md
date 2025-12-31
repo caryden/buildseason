@@ -3,7 +3,9 @@
 **Version:** 1.0
 **Date:** December 30, 2025
 **Status:** Research Complete
-**Companion Documents:** [requirements.md](./requirements.md), [specification.md](./specification.md)
+**Companion Documents:** [requirements.md](./requirements.md), [specification.md](./specification.md), [ui-refocus-spec.md](./ui-refocus-spec.md)
+
+> **UI Integration:** See [ui-refocus-spec.md](./ui-refocus-spec.md) for GLaDOS Chat Interface (Phase 12) and Action Center Dashboard (Phase 2) UI specifications.
 
 ---
 
@@ -40,6 +42,7 @@ From the requirements document:
 > "The agent isn't a feature bolted onto a database. **The agent IS the experience.**"
 
 This demands an architecture where:
+
 - Discord is the primary interface (not the web app)
 - The agent is proactive, not just reactive
 - Personality (GLaDOS, Wheatley, etc.) is a functional delivery mechanism
@@ -47,26 +50,26 @@ This demands an architecture where:
 
 ### 1.2 Agent Capabilities Required
 
-| Capability | Description | Priority |
-|------------|-------------|----------|
-| **Natural Language Understanding** | Parse queries like "can we afford 4 servos?" | Critical |
-| **Multi-Step Reasoning** | Cross-reference inventory, budget, lead times | Critical |
-| **Personality System** | GLaDOS, Wheatley, neutral personas | High |
-| **Tool Calling** | Query databases, call vendor APIs, trigger actions | Critical |
-| **Proactive Monitoring** | Detect low stock, delayed shipments, BOM changes | Critical |
-| **Graduated Escalation** | 3 reminders → escalate to mentor | High |
-| **Context Management** | Remember conversation history, team context | High |
-| **Multi-Agent Coordination** | Parallel tasks (check OnShape + vendors simultaneously) | Medium |
+| Capability                         | Description                                             | Priority |
+| ---------------------------------- | ------------------------------------------------------- | -------- |
+| **Natural Language Understanding** | Parse queries like "can we afford 4 servos?"            | Critical |
+| **Multi-Step Reasoning**           | Cross-reference inventory, budget, lead times           | Critical |
+| **Personality System**             | GLaDOS, Wheatley, neutral personas                      | High     |
+| **Tool Calling**                   | Query databases, call vendor APIs, trigger actions      | Critical |
+| **Proactive Monitoring**           | Detect low stock, delayed shipments, BOM changes        | Critical |
+| **Graduated Escalation**           | 3 reminders → escalate to mentor                        | High     |
+| **Context Management**             | Remember conversation history, team context             | High     |
+| **Multi-Agent Coordination**       | Parallel tasks (check OnShape + vendors simultaneously) | Medium   |
 
 ### 1.3 Existing Technology Stack
 
-| Layer | Technology | Implication |
-|-------|------------|-------------|
-| Runtime | Bun | Fast, TypeScript-native |
-| API | Hono | Lightweight, type-safe |
-| Database | Turso (libSQL) + Drizzle | SQLite-compatible |
-| Auth | Better-Auth | Session-based |
-| Workflows | Temporal.io (planned) | Durable execution |
+| Layer     | Technology               | Implication             |
+| --------- | ------------------------ | ----------------------- |
+| Runtime   | Bun                      | Fast, TypeScript-native |
+| API       | Hono                     | Lightweight, type-safe  |
+| Database  | Turso (libSQL) + Drizzle | SQLite-compatible       |
+| Auth      | Better-Auth              | Session-based           |
+| Workflows | Temporal.io (planned)    | Durable execution       |
 
 **Key Constraint:** Framework must have excellent TypeScript support to integrate with the existing stack.
 
@@ -76,35 +79,35 @@ This demands an architecture where:
 
 ### 2.1 Technical Criteria
 
-| Criterion | Weight | Description |
-|-----------|--------|-------------|
-| **TypeScript Support** | 30% | Native TS support, type safety, npm package |
-| **LLM Flexibility** | 15% | Model-agnostic or optimal for Anthropic Claude |
-| **Tool Calling** | 20% | Robust tool definition, execution, error handling |
-| **State Management** | 15% | Conversation context, workflow state |
-| **Temporal Integration** | 10% | Works well alongside Temporal workflows |
-| **MCP Support** | 10% | Model Context Protocol for standard integrations |
+| Criterion                | Weight | Description                                       |
+| ------------------------ | ------ | ------------------------------------------------- |
+| **TypeScript Support**   | 30%    | Native TS support, type safety, npm package       |
+| **LLM Flexibility**      | 15%    | Model-agnostic or optimal for Anthropic Claude    |
+| **Tool Calling**         | 20%    | Robust tool definition, execution, error handling |
+| **State Management**     | 15%    | Conversation context, workflow state              |
+| **Temporal Integration** | 10%    | Works well alongside Temporal workflows           |
+| **MCP Support**          | 10%    | Model Context Protocol for standard integrations  |
 
 ### 2.2 Operational Criteria
 
-| Criterion | Weight | Description |
-|-----------|--------|-------------|
-| **Production Readiness** | 25% | Battle-tested, stable API, enterprise use |
-| **Scalability** | 15% | Handles multiple teams, concurrent requests |
-| **Observability** | 15% | Tracing, logging, debugging capabilities |
-| **Documentation** | 20% | Clear docs, examples, community support |
-| **Maintenance** | 15% | Active development, responsive maintainers |
-| **Cost** | 10% | Licensing, API costs, infrastructure needs |
+| Criterion                | Weight | Description                                 |
+| ------------------------ | ------ | ------------------------------------------- |
+| **Production Readiness** | 25%    | Battle-tested, stable API, enterprise use   |
+| **Scalability**          | 15%    | Handles multiple teams, concurrent requests |
+| **Observability**        | 15%    | Tracing, logging, debugging capabilities    |
+| **Documentation**        | 20%    | Clear docs, examples, community support     |
+| **Maintenance**          | 15%    | Active development, responsive maintainers  |
+| **Cost**                 | 10%    | Licensing, API costs, infrastructure needs  |
 
 ### 2.3 BuildSeason-Specific Criteria
 
-| Criterion | Weight | Description |
-|-----------|--------|-------------|
-| **Discord Integration** | 25% | Native Discord patterns, message handling |
-| **Personality Support** | 20% | System prompts, temperature control, character |
-| **Proactive Patterns** | 20% | Schedule-based triggers, event-driven alerts |
-| **Multi-Step Workflows** | 20% | Order approval, permission collection |
-| **Human-in-Loop** | 15% | Pause for approval, handle reactions |
+| Criterion                | Weight | Description                                    |
+| ------------------------ | ------ | ---------------------------------------------- |
+| **Discord Integration**  | 25%    | Native Discord patterns, message handling      |
+| **Personality Support**  | 20%    | System prompts, temperature control, character |
+| **Proactive Patterns**   | 20%    | Schedule-based triggers, event-driven alerts   |
+| **Multi-Step Workflows** | 20%    | Order approval, permission collection          |
+| **Human-in-Loop**        | 15%    | Pause for approval, handle reactions           |
 
 ---
 
@@ -112,19 +115,19 @@ This demands an architecture where:
 
 ### 3.1 Primary Candidates
 
-| Framework | Vendor | Focus | TypeScript |
-|-----------|--------|-------|------------|
-| **Claude Agent SDK** | Anthropic | Single sophisticated agent | ✅ Native |
-| **LangGraph** | LangChain | Graph-based multi-agent | ✅ Native |
-| **OpenAI Agents SDK** | OpenAI | Handoff-based delegation | ✅ Native |
-| **Vercel AI SDK** | Vercel | TypeScript-first AI toolkit | ✅ Native |
-| **CrewAI** | CrewAI Inc | Role-based multi-agent | ⚠️ Python primary |
-| **Microsoft Agent Framework** | Microsoft | Enterprise multi-agent | ⚠️ C#/Python primary |
+| Framework                     | Vendor     | Focus                       | TypeScript           |
+| ----------------------------- | ---------- | --------------------------- | -------------------- |
+| **Claude Agent SDK**          | Anthropic  | Single sophisticated agent  | ✅ Native            |
+| **LangGraph**                 | LangChain  | Graph-based multi-agent     | ✅ Native            |
+| **OpenAI Agents SDK**         | OpenAI     | Handoff-based delegation    | ✅ Native            |
+| **Vercel AI SDK**             | Vercel     | TypeScript-first AI toolkit | ✅ Native            |
+| **CrewAI**                    | CrewAI Inc | Role-based multi-agent      | ⚠️ Python primary    |
+| **Microsoft Agent Framework** | Microsoft  | Enterprise multi-agent      | ⚠️ C#/Python primary |
 
 ### 3.2 Orchestration Layer (Already Decided)
 
-| Framework | Role | Status |
-|-----------|------|--------|
+| Framework       | Role                           | Status           |
+| --------------- | ------------------------------ | ---------------- |
 | **Temporal.io** | Durable workflow orchestration | In specification |
 
 ---
@@ -137,6 +140,7 @@ This demands an architecture where:
 The Claude Agent SDK is Anthropic's framework for building autonomous AI agents. It provides the same agent loop, tools, and context management that powers Claude Code.
 
 **Key Features:**
+
 - Native TypeScript package: `@anthropic-ai/claude-agent-sdk`
 - Built-in Model Context Protocol (MCP) support
 - Automatic context compaction for long conversations
@@ -162,6 +166,7 @@ The Claude Agent SDK is Anthropic's framework for building autonomous AI agents.
 | Tool count limit (10-15) | Use hierarchical tool groups |
 
 **Discord Integration Pattern:**
+
 ```typescript
 import { Agent } from "@anthropic-ai/claude-agent-sdk";
 import { Client, Message } from "discord.js";
@@ -192,6 +197,7 @@ client.on("messageCreate", async (message: Message) => {
 LangGraph is LangChain's framework for graph-based, stateful multi-agent workflows. It reached v1.0 in November 2025.
 
 **Key Features:**
+
 - Graph-based state machine for complex workflows
 - Built-in persistence for durable agents
 - Human-in-the-loop patterns (pause, review, approve)
@@ -224,6 +230,7 @@ LangGraph is LangChain's framework for graph-based, stateful multi-agent workflo
 OpenAI's production-ready evolution of Swarm (experimental). Launched March 2025 with handoff-based agent delegation.
 
 **Key Features:**
+
 - Lightweight primitives: Agents, Handoffs, Guardrails, Sessions
 - Built-in tracing and debugging
 - Provider-agnostic (works with 100+ LLMs)
@@ -255,6 +262,7 @@ OpenAI's production-ready evolution of Swarm (experimental). Launched March 2025
 The leading TypeScript toolkit for AI applications. AI SDK 6 introduced agent abstractions and the Workflow Development Kit.
 
 **Key Features:**
+
 - 20M+ monthly downloads, Fortune 500 adoption
 - Agent abstraction: define once, use everywhere
 - Workflow DevKit: DurableAgent for production
@@ -286,6 +294,7 @@ The leading TypeScript toolkit for AI applications. AI SDK 6 introduced agent ab
 Open-source framework for orchestrating role-playing, autonomous AI agents. 30.5K GitHub stars, 1M monthly downloads.
 
 **Key Features:**
+
 - Crews: Teams of autonomous agents
 - Flows: Event-driven production workflows
 - Dual architecture for flexibility
@@ -315,6 +324,7 @@ Open-source framework for orchestrating role-playing, autonomous AI agents. 30.5
 Unification of AutoGen and Semantic Kernel. Public preview October 2025, GA Q1 2026.
 
 **Key Features:**
+
 - Enterprise-ready: Azure integration, compliance (SOC 2, HIPAA)
 - Multi-language: C#, Python, Java
 - OpenTelemetry observability
@@ -345,6 +355,7 @@ Unification of AutoGen and Semantic Kernel. Public preview October 2025, GA Q1 2
 Open-source durable execution engine. Originally from Uber's Cadence project.
 
 **Key Features:**
+
 - Workflows survive crashes, restarts, deployments
 - Built-in retries, timeouts, state persistence
 - OpenTelemetry observability
@@ -353,25 +364,23 @@ Open-source durable execution engine. Originally from Uber's Cadence project.
 
 **Why Temporal for BuildSeason:**
 
-| Use Case | Temporal Capability |
-|----------|---------------------|
-| Order Approval | Wait hours/days for human input, escalate on timeout |
-| Permission Forms | Graduated reminders, parent notification, deadline tracking |
+| Use Case          | Temporal Capability                                         |
+| ----------------- | ----------------------------------------------------------- |
+| Order Approval    | Wait hours/days for human input, escalate on timeout        |
+| Permission Forms  | Graduated reminders, parent notification, deadline tracking |
 | Meal Coordination | Multi-step polling, restaurant selection, delivery tracking |
-| OnShape Sync | BOM diff, inventory cross-reference, notification |
-| Travel Monitoring | Flight status, rebooking scenarios, multi-day tracking |
+| OnShape Sync      | BOM diff, inventory cross-reference, notification           |
+| Travel Monitoring | Flight status, rebooking scenarios, multi-day tracking      |
 
 **Temporal + Agent SDK Pattern:**
+
 ```typescript
 // Workflow orchestrates, Agent reasons
 export async function orderApprovalWorkflow(orderId: string) {
   // Temporal handles durability
   await notifyApprovers(orderId);
 
-  const approved = await condition(
-    () => isApproved(orderId),
-    "72 hours"
-  );
+  const approved = await condition(() => isApproved(orderId), "72 hours");
 
   if (!approved) {
     // Agent adds intelligence
@@ -392,33 +401,33 @@ export async function orderApprovalWorkflow(orderId: string) {
 
 ### 5.1 Technical Comparison
 
-| Framework | TS Support | LLM Flexibility | Tool Calling | State Mgmt | MCP |
-|-----------|------------|-----------------|--------------|------------|-----|
-| Claude Agent SDK | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (Claude) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| LangGraph | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| OpenAI Agents SDK | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Vercel AI SDK | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| CrewAI | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
-| MS Agent Framework | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Framework          | TS Support | LLM Flexibility | Tool Calling | State Mgmt | MCP        |
+| ------------------ | ---------- | --------------- | ------------ | ---------- | ---------- |
+| Claude Agent SDK   | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (Claude) | ⭐⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| LangGraph          | ⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐      | ⭐⭐⭐⭐     | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐   |
+| OpenAI Agents SDK  | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐        | ⭐⭐⭐⭐     | ⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐ |
+| Vercel AI SDK      | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐      | ⭐⭐⭐⭐     | ⭐⭐⭐     | ⭐⭐⭐⭐⭐ |
+| CrewAI             | ⭐⭐       | ⭐⭐⭐⭐        | ⭐⭐⭐⭐     | ⭐⭐⭐⭐   | ⭐⭐       |
+| MS Agent Framework | ⭐⭐       | ⭐⭐⭐⭐        | ⭐⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐ | ⭐⭐⭐     |
 
 ### 5.2 BuildSeason-Specific Comparison
 
-| Framework | Discord | Personality | Proactive | Workflows | Human-Loop |
-|-----------|---------|-------------|-----------|-----------|------------|
-| Claude Agent SDK | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| LangGraph | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| OpenAI Agents SDK | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
-| Vercel AI SDK | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Framework         | Discord  | Personality | Proactive | Workflows  | Human-Loop |
+| ----------------- | -------- | ----------- | --------- | ---------- | ---------- |
+| Claude Agent SDK  | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐  | ⭐⭐⭐⭐  | ⭐⭐⭐⭐   | ⭐⭐⭐⭐   |
+| LangGraph         | ⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐    | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| OpenAI Agents SDK | ⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐    | ⭐⭐⭐     | ⭐⭐⭐     |
+| Vercel AI SDK     | ⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐    | ⭐⭐⭐⭐   | ⭐⭐⭐     |
 
 ### 5.3 Production Readiness
 
-| Framework | Maturity | Enterprise Use | Documentation | Support |
-|-----------|----------|----------------|---------------|---------|
-| Claude Agent SDK | GA | Claude Code, Cursor | ⭐⭐⭐⭐ | Anthropic |
-| LangGraph | v1.0 | Uber, LinkedIn, Klarna | ⭐⭐⭐ | LangChain |
-| OpenAI Agents SDK | GA (2025) | OpenAI Codex | ⭐⭐⭐⭐ | OpenAI |
-| Vercel AI SDK | v6 | Fortune 500 | ⭐⭐⭐⭐⭐ | Vercel |
-| Temporal.io | Mature | Uber, Snapchat, Netflix | ⭐⭐⭐⭐⭐ | Temporal |
+| Framework         | Maturity  | Enterprise Use          | Documentation | Support   |
+| ----------------- | --------- | ----------------------- | ------------- | --------- |
+| Claude Agent SDK  | GA        | Claude Code, Cursor     | ⭐⭐⭐⭐      | Anthropic |
+| LangGraph         | v1.0      | Uber, LinkedIn, Klarna  | ⭐⭐⭐        | LangChain |
+| OpenAI Agents SDK | GA (2025) | OpenAI Codex            | ⭐⭐⭐⭐      | OpenAI    |
+| Vercel AI SDK     | v6        | Fortune 500             | ⭐⭐⭐⭐⭐    | Vercel    |
+| Temporal.io       | Mature    | Uber, Snapchat, Netflix | ⭐⭐⭐⭐⭐    | Temporal  |
 
 ---
 
@@ -461,16 +470,16 @@ Based on the evaluation, we recommend a **dual-layer architecture**:
 
 ### 6.2 Why This Combination?
 
-| Requirement | Temporal.io | Claude Agent SDK | Together |
-|-------------|-------------|------------------|----------|
-| Durable workflows | ✅ Core strength | ❌ Session-based | ✅ |
-| NLU/Personality | ❌ No AI | ✅ Core strength | ✅ |
-| Tool calling | ⚠️ Activities | ✅ Built-in | ✅ |
-| Multi-step reasoning | ❌ No AI | ✅ Extended thinking | ✅ |
-| Survive restarts | ✅ Core strength | ❌ Loses state | ✅ |
-| Human-in-loop | ✅ Signals/Queries | ⚠️ Basic | ✅ |
-| Scheduled tasks | ✅ Built-in | ❌ External needed | ✅ |
-| TypeScript support | ✅ Native | ✅ Native | ✅ |
+| Requirement          | Temporal.io        | Claude Agent SDK     | Together |
+| -------------------- | ------------------ | -------------------- | -------- |
+| Durable workflows    | ✅ Core strength   | ❌ Session-based     | ✅       |
+| NLU/Personality      | ❌ No AI           | ✅ Core strength     | ✅       |
+| Tool calling         | ⚠️ Activities      | ✅ Built-in          | ✅       |
+| Multi-step reasoning | ❌ No AI           | ✅ Extended thinking | ✅       |
+| Survive restarts     | ✅ Core strength   | ❌ Loses state       | ✅       |
+| Human-in-loop        | ✅ Signals/Queries | ⚠️ Basic             | ✅       |
+| Scheduled tasks      | ✅ Built-in        | ❌ External needed   | ✅       |
+| TypeScript support   | ✅ Native          | ✅ Native            | ✅       |
 
 ### 6.3 Interaction Model
 
@@ -519,14 +528,14 @@ Based on the evaluation, we recommend a **dual-layer architecture**:
 
 ### 6.4 Component Responsibilities
 
-| Component | Responsibilities |
-|-----------|------------------|
-| **Discord Bot** | Message routing, rate limiting, reaction handling, channel awareness |
-| **Claude Agent SDK** | NLU, personality, tool execution, reasoning, MCP integrations |
-| **Temporal Workflows** | Order approval, permission forms, meal coordination, travel monitoring |
-| **Temporal Activities** | Database operations, API calls, notifications, email sending |
-| **Hono API** | CRUD operations, webhook handlers, web interface backend |
-| **Turso Database** | Persistent storage, conversation history, team data |
+| Component               | Responsibilities                                                       |
+| ----------------------- | ---------------------------------------------------------------------- |
+| **Discord Bot**         | Message routing, rate limiting, reaction handling, channel awareness   |
+| **Claude Agent SDK**    | NLU, personality, tool execution, reasoning, MCP integrations          |
+| **Temporal Workflows**  | Order approval, permission forms, meal coordination, travel monitoring |
+| **Temporal Activities** | Database operations, API calls, notifications, email sending           |
+| **Hono API**            | CRUD operations, webhook handlers, web interface backend               |
+| **Turso Database**      | Persistent storage, conversation history, team data                    |
 
 ---
 
@@ -535,11 +544,13 @@ Based on the evaluation, we recommend a **dual-layer architecture**:
 ### 7.1 Claude Agent SDK Integration
 
 **Package Installation:**
+
 ```bash
 bun add @anthropic-ai/claude-agent-sdk
 ```
 
 **Personality Configuration:**
+
 ```typescript
 // apps/agent/src/personalities.ts
 export const personalities = {
@@ -573,18 +584,20 @@ always come back to being helpful.`,
   neutral: {
     systemPrompt: `You are a professional team management assistant.
 Be concise, helpful, and direct. Format for Discord.`,
-    model: "claude-haiku-3-5",  // Cheaper for simple queries
+    model: "claude-haiku-3-5", // Cheaper for simple queries
     temperature: 0.3,
   },
 };
 ```
 
 **Tool Definitions:**
+
 ```typescript
 // apps/agent/src/tools/inventory.ts
 export const inventoryQueryTool = {
   name: "query_inventory",
-  description: "Search for parts in team inventory by name, SKU, or description",
+  description:
+    "Search for parts in team inventory by name, SKU, or description",
   parameters: {
     type: "object",
     properties: {
@@ -597,10 +610,7 @@ export const inventoryQueryTool = {
     const parts = await db.query.parts.findMany({
       where: and(
         eq(parts.teamId, teamId),
-        or(
-          like(parts.name, `%${query}%`),
-          like(parts.sku, `%${query}%`),
-        ),
+        or(like(parts.name, `%${query}%`), like(parts.sku, `%${query}%`))
       ),
       with: { vendor: true },
     });
@@ -615,7 +625,10 @@ export const budgetCheckTool = {
     type: "object",
     properties: {
       teamId: { type: "string" },
-      category: { type: "string", description: "Optional: parts, travel, etc." },
+      category: {
+        type: "string",
+        description: "Optional: parts, travel, etc.",
+      },
     },
     required: ["teamId"],
   },
@@ -629,15 +642,25 @@ export const budgetCheckTool = {
 ### 7.2 Temporal Integration
 
 **Workflow Example - Order Approval:**
+
 ```typescript
 // apps/workflows/src/order-approval.ts
-import { proxyActivities, sleep, condition, defineSignal } from "@temporalio/workflow";
+import {
+  proxyActivities,
+  sleep,
+  condition,
+  defineSignal,
+} from "@temporalio/workflow";
 import type * as activities from "./activities/order";
 
-const { notifyApprovers, sendReminder, escalateToMentor, generateAgentMessage } =
-  proxyActivities<typeof activities>({
-    startToCloseTimeout: "1 minute",
-  });
+const {
+  notifyApprovers,
+  sendReminder,
+  escalateToMentor,
+  generateAgentMessage,
+} = proxyActivities<typeof activities>({
+  startToCloseTimeout: "1 minute",
+});
 
 export const approveSignal = defineSignal("approve");
 export const rejectSignal = defineSignal<[string]>("reject");
@@ -649,7 +672,7 @@ export async function orderApprovalWorkflow(orderId: string): Promise<void> {
   // Notify approvers with GLaDOS personality
   const notificationMessage = await generateAgentMessage(
     `An order needs approval. Order ID: ${orderId}.
-     Generate a notification message in GLaDOS style.`,
+     Generate a notification message in GLaDOS style.`
   );
   await notifyApprovers(orderId, notificationMessage);
 
@@ -661,17 +684,14 @@ export async function orderApprovalWorkflow(orderId: string): Promise<void> {
   ];
 
   for (const step of escalationSteps) {
-    const resolved = await condition(
-      () => approved || rejected,
-      step.wait,
-    );
+    const resolved = await condition(() => approved || rejected, step.wait);
 
     if (resolved) break;
 
     if (step.action === "reminder") {
       const reminder = await generateAgentMessage(
         `Order ${orderId} still pending after 24 hours.
-         Generate a reminder in GLaDOS style, slightly more pointed.`,
+         Generate a reminder in GLaDOS style, slightly more pointed.`
       );
       await sendReminder(orderId, reminder);
     } else if (step.action === "escalate") {
@@ -683,7 +703,7 @@ export async function orderApprovalWorkflow(orderId: string): Promise<void> {
   if (!approved && !rejected) {
     const timeoutMessage = await generateAgentMessage(
       `Order ${orderId} expired after 72 hours with no response.
-       Generate an escalation to coach in GLaDOS style.`,
+       Generate an escalation to coach in GLaDOS style.`
     );
     await escalateToCoach(orderId, timeoutMessage);
   }
@@ -713,6 +733,7 @@ export const githubMCP = new MCPClient({
 ### 7.4 Cost Optimization
 
 **Model Selection Strategy:**
+
 ```typescript
 // apps/agent/src/router.ts
 async function routeQuery(query: string, complexity: "simple" | "complex") {
@@ -732,6 +753,7 @@ async function routeQuery(query: string, complexity: "simple" | "complex") {
 ```
 
 **Prompt Caching:**
+
 ```typescript
 // Cache the personality system prompt (90% savings on repeated calls)
 const cachedSystemPrompt = await cachePrompt(personalities.glados.systemPrompt);
@@ -743,45 +765,50 @@ const cachedSystemPrompt = await cachePrompt(personalities.glados.systemPrompt);
 
 ### 8.1 Primary Recommendation
 
-| Layer | Choice | Rationale |
-|-------|--------|-----------|
+| Layer            | Choice           | Rationale                                                 |
+| ---------------- | ---------------- | --------------------------------------------------------- |
 | **Intelligence** | Claude Agent SDK | Best personality support, tool calling, TypeScript native |
-| **Durability** | Temporal.io | Industry-standard durable execution, already in spec |
-| **LLM Provider** | Anthropic Claude | Sonnet for complex, Haiku for simple queries |
+| **Durability**   | Temporal.io      | Industry-standard durable execution, already in spec      |
+| **LLM Provider** | Anthropic Claude | Sonnet for complex, Haiku for simple queries              |
 
 ### 8.2 Alternative Options
 
 **If LLM flexibility is critical:**
+
 - Consider **Vercel AI SDK** for provider-agnostic approach
 - Use with Claude as primary, fallback to other providers
 
 **If multi-agent routing is primary need:**
+
 - Consider **LangGraph** for graph-based orchestration
 - More complexity, steeper learning curve
 
 ### 8.3 Not Recommended
 
-| Framework | Reason |
-|-----------|--------|
-| CrewAI | Python-first, doesn't align with TypeScript stack |
-| Microsoft Agent Framework | C#/Azure focus, preview status |
-| OpenAI Agents SDK | Optimized for OpenAI, less personality control |
+| Framework                 | Reason                                            |
+| ------------------------- | ------------------------------------------------- |
+| CrewAI                    | Python-first, doesn't align with TypeScript stack |
+| Microsoft Agent Framework | C#/Azure focus, preview status                    |
+| OpenAI Agents SDK         | Optimized for OpenAI, less personality control    |
 
 ### 8.4 Implementation Priority
 
 **Phase 2 (Agent Intelligence):**
+
 1. Integrate Claude Agent SDK with Discord bot
 2. Implement tool definitions (inventory, budget, orders)
 3. Add personality system with team configuration
 4. Connect to Temporal for workflow triggers
 
 **Phase 2.5 (Proactive Features):**
+
 1. Add scheduled Temporal workflows for monitoring
 2. Implement OnShape MCP integration
 3. Add GitHub MCP for software teams
 4. Enable proactive notifications
 
 **Phase 3 (Scale):**
+
 1. Optimize with prompt caching
 2. Add model routing (Haiku/Sonnet)
 3. Implement batch processing for notifications
@@ -791,14 +818,14 @@ const cachedSystemPrompt = await cachePrompt(personalities.glados.systemPrompt);
 
 ## Appendix A: Framework Links
 
-| Framework | Documentation | Repository |
-|-----------|---------------|------------|
-| Claude Agent SDK | [docs.claude.com/agent-sdk](https://docs.claude.com/en/api/agent-sdk/overview) | [github.com/anthropics/claude-agent-sdk](https://github.com/anthropics/claude-agent-sdk-typescript) |
-| Temporal.io | [docs.temporal.io](https://docs.temporal.io) | [github.com/temporalio/temporal](https://github.com/temporalio/temporal) |
-| LangGraph | [langchain.com/langgraph](https://www.langchain.com/langgraph) | [github.com/langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) |
-| Vercel AI SDK | [ai-sdk.dev](https://ai-sdk.dev/docs/introduction) | [github.com/vercel/ai](https://github.com/vercel/ai) |
-| OpenAI Agents SDK | [openai.github.io/agents](https://openai.github.io/openai-agents-python/) | [github.com/openai/swarm](https://github.com/openai/swarm) |
-| CrewAI | [docs.crewai.com](https://docs.crewai.com) | [github.com/crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) |
+| Framework         | Documentation                                                                  | Repository                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Claude Agent SDK  | [docs.claude.com/agent-sdk](https://docs.claude.com/en/api/agent-sdk/overview) | [github.com/anthropics/claude-agent-sdk](https://github.com/anthropics/claude-agent-sdk-typescript) |
+| Temporal.io       | [docs.temporal.io](https://docs.temporal.io)                                   | [github.com/temporalio/temporal](https://github.com/temporalio/temporal)                            |
+| LangGraph         | [langchain.com/langgraph](https://www.langchain.com/langgraph)                 | [github.com/langchain-ai/langgraph](https://github.com/langchain-ai/langgraph)                      |
+| Vercel AI SDK     | [ai-sdk.dev](https://ai-sdk.dev/docs/introduction)                             | [github.com/vercel/ai](https://github.com/vercel/ai)                                                |
+| OpenAI Agents SDK | [openai.github.io/agents](https://openai.github.io/openai-agents-python/)      | [github.com/openai/swarm](https://github.com/openai/swarm)                                          |
+| CrewAI            | [docs.crewai.com](https://docs.crewai.com)                                     | [github.com/crewAIInc/crewAI](https://github.com/crewAIInc/crewAI)                                  |
 
 ---
 
@@ -818,4 +845,4 @@ const cachedSystemPrompt = await cachePrompt(personalities.glados.systemPrompt);
 
 ---
 
-*Document maintained at: buildseason.org/docs/agentic-spec*
+_Document maintained at: buildseason.org/docs/agentic-spec_

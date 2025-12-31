@@ -1,6 +1,6 @@
 ---
-description: Agent army orchestration - status, deploy, and management
-argument-hint: <status|deploy|review> [options]
+description: Agent army orchestration - status, deploy, and management (project)
+argument-hint: <status|deploy|review|deploy-fixes|prepare-checkpoint> [options]
 ---
 
 # Army Command
@@ -11,11 +11,31 @@ Orchestrate the agent army for parallel development on BuildSeason.
 
 Parse the first word of `$ARGUMENTS` to determine subcommand:
 
-| Subcommand | Usage                 | Description                                     |
-| ---------- | --------------------- | ----------------------------------------------- |
-| `status`   | `/army status`        | Show wave progress and checkpoint gates         |
-| `deploy`   | `/army deploy <wave>` | Launch parallel agents for a wave               |
-| `review`   | `/army review <wave>` | Review completed work before closing checkpoint |
+| Subcommand           | Usage                             | Description                                   |
+| -------------------- | --------------------------------- | --------------------------------------------- |
+| `status`             | `/army status`                    | Show wave progress and checkpoint gates       |
+| `deploy`             | `/army deploy <wave>`             | Launch parallel agents for a wave             |
+| `review`             | `/army review <wave>`             | Run automated reviews (code, security, UI/UX) |
+| `deploy-fixes`       | `/army deploy-fixes <wave>`       | Fix issues discovered by reviews              |
+| `prepare-checkpoint` | `/army prepare-checkpoint <wave>` | Generate checkpoint summary for human review  |
+
+## Complete Wave Workflow
+
+```
+Wave N Complete
+    ↓
+/army review N           ← 3 parallel review agents
+    ↓
+Creates discovery beads (bugs, questions)
+    ↓
+/army deploy-fixes N     ← fix discovered issues
+    ↓
+/army prepare-checkpoint N  ← generate summary
+    ↓
+Human Review (you close checkpoint when satisfied)
+    ↓
+/army deploy N+1         ← next wave unlocked
+```
 
 ---
 
@@ -213,59 +233,519 @@ When complete, run: /army review <wave>
 
 **Usage:** `/army review <wave-number>`
 
+### Purpose
+
+Launch 3 parallel review agents to audit the wave's implementation:
+
+1. **Code Review** - quality, patterns, tests, coverage, TODOs
+2. **Security Review** - auth, validation, injection, secrets
+3. **UI/UX Review** - spec compliance, accessibility, consistency
+
+Reviews DO NOT fix code. They create discovery beads for issues found.
+
 ### Instructions
 
-1. **Check agent completion:**
-   - Use `/tasks` or TaskOutput to check if all agents are done
+1. **Determine checkpoint bead for this wave:**
 
-2. **Show summary of changes:**
+| Wave | Checkpoint Bead  |
+| ---- | ---------------- |
+| 0    | buildseason-6ea  |
+| 1    | buildseason-2zlp |
+| 2    | buildseason-z942 |
+| 3    | buildseason-4a5n |
+
+2. **Create review tracking beads:**
 
 ```bash
-git status
-git log --oneline -10
+bd create --title="Wave X Code Review" --type=task --priority=1 --parent=<checkpoint-bead>
+bd create --title="Wave X Security Review" --type=task --priority=1 --parent=<checkpoint-bead>
+bd create --title="Wave X UI/UX Review" --type=task --priority=1 --parent=<checkpoint-bead>
 ```
 
-3. **List closed beads in wave:**
-   - Check which beads in the wave are now closed
+Note the bead IDs created (e.g., `buildseason-abc`, `buildseason-def`, `buildseason-ghi`).
 
-4. **Display review checklist:**
+3. **Launch 3 review agents in parallel** using a SINGLE Task tool message:
 
-```
-============================================================
-              WAVE X REVIEW
-============================================================
+#### Code Review Agent Prompt:
 
-Agents Complete: Y/N
+````
+You are a CODE REVIEW agent for BuildSeason Wave X.
 
-Changes Made:
-  - <file1>: <summary>
-  - <file2>: <summary>
+YOUR ROLE: Audit code quality. DO NOT fix anything - create beads for issues found.
 
-Beads Closed:
-  ✓ buildseason-xyz: <title>
-  ✓ buildseason-abc: <title>
-  ○ buildseason-def: Still open
-
-------------------------------------------------------------
 REVIEW CHECKLIST:
-------------------------------------------------------------
-[ ] Code compiles without errors
-[ ] Tests pass (bun test)
-[ ] UI renders correctly (bun dev)
-[ ] Changes match spec requirements
-[ ] No unintended side effects
+1. Run `bun run typecheck` - note any errors
+2. Run `bun test` if tests exist - note failures
+3. Check test coverage: are critical paths tested?
+4. Review code patterns:
+   - Consistent error handling?
+   - Proper TypeScript types (no `any` abuse)?
+   - Following existing patterns in codebase?
+   - Dead code or unused imports?
+   - TODO/FIXME comments that need addressing?
+5. Check for code smells:
+   - Functions over 50 lines?
+   - Deeply nested conditionals?
+   - Duplicated logic?
 
-------------------------------------------------------------
+FOR EACH ISSUE FOUND, create a bead:
+```bash
+bd create --title="<specific issue>" --type=bug --priority=<0-4> --label="discovered-from:<review-bead-id>" --label="review:code"
+````
+
+Priority guide:
+
+- P0: Build broken, tests failing
+- P1: Type errors, missing error handling
+- P2: Code smells, missing tests
+- P3: Style issues, minor improvements
+- P4: Nice-to-haves
+
+If you find ambiguity needing human decision:
+
+```bash
+bd create --title="Question: <specific question>" --type=task --priority=2 --label="human" --label="discovered-from:<review-bead-id>"
+```
+
+WHEN COMPLETE:
+
+1. Close your review bead: `bd close <review-bead-id> --reason="Found N issues"`
+2. Report summary of issues created
+
+REVIEW BEAD: <code-review-bead-id>
+
+```
+
+#### Security Review Agent Prompt:
+
+```
+
+You are a SECURITY REVIEW agent for BuildSeason Wave X.
+
+YOUR ROLE: Audit security. DO NOT fix anything - create beads for issues found.
+
+REVIEW CHECKLIST:
+
+1. Authentication & Authorization:
+   - Are API routes properly protected?
+   - Are user permissions checked before actions?
+   - Is session handling secure?
+
+2. Input Validation:
+   - User inputs sanitized?
+   - SQL injection possible? (check raw queries)
+   - XSS vulnerabilities? (check rendered user content)
+   - Path traversal possible?
+
+3. Data Exposure:
+   - Sensitive data in logs?
+   - Secrets in code? (API keys, passwords)
+   - PII exposed in API responses?
+   - Proper data filtering for user context?
+
+4. API Security:
+   - Rate limiting in place?
+   - CORS configured properly?
+   - Proper HTTP methods used?
+
+5. Dependencies:
+   - Run `bun audit` if available
+   - Check for known vulnerable packages
+
+FOR EACH ISSUE FOUND, create a bead:
+
+```bash
+bd create --title="SECURITY: <specific issue>" --type=bug --priority=<0-2> --label="discovered-from:<review-bead-id>" --label="review:security"
+```
+
+Security issues should generally be P0-P2:
+
+- P0: Active vulnerability, data exposure
+- P1: Missing auth check, injection possible
+- P2: Hardening needed, best practice violation
+
+If you find ambiguity needing human decision:
+
+```bash
+bd create --title="Question: <security question>" --type=task --priority=1 --label="human" --label="discovered-from:<review-bead-id>"
+```
+
+WHEN COMPLETE:
+
+1. Close your review bead: `bd close <review-bead-id> --reason="Found N issues"`
+2. Report summary - ESPECIALLY note any P0/P1 security issues
+
+REVIEW BEAD: <security-review-bead-id>
+
+```
+
+#### UI/UX Review Agent Prompt:
+
+```
+
+You are a UI/UX REVIEW agent for BuildSeason Wave X.
+
+YOUR ROLE: Audit UI implementation against specs. DO NOT fix anything - create beads for issues found.
+
+SPECS TO REFERENCE:
+
+- docs/ui-refocus-spec.md (primary UI spec)
+- docs/ui-ux-design-spec.md (design system)
+- Individual bead descriptions for feature requirements
+
+REVIEW CHECKLIST:
+
+1. Spec Compliance:
+   - Does implementation match spec requirements?
+   - Are all specified features present?
+   - Do component behaviors match spec?
+
+2. Design System:
+   - Using shadcn/ui components correctly?
+   - Consistent spacing (Tailwind scale)?
+   - Proper color usage (theme tokens)?
+   - Typography hierarchy correct?
+
+3. Accessibility:
+   - Proper ARIA labels?
+   - Keyboard navigation works?
+   - Color contrast sufficient?
+   - Focus indicators visible?
+
+4. Responsive Design:
+   - Mobile layout works?
+   - Tablet breakpoints handled?
+   - No horizontal scroll on mobile?
+
+5. Loading & Error States:
+   - Loading indicators present?
+   - Error messages helpful?
+   - Empty states designed?
+
+6. Consistency:
+   - Similar patterns across pages?
+   - Consistent button styles/placement?
+   - Navigation predictable?
+
+FOR EACH ISSUE FOUND, create a bead:
+
+```bash
+bd create --title="UI: <specific issue>" --type=bug --priority=<1-3> --label="discovered-from:<review-bead-id>" --label="review:ux"
+```
+
+Priority guide:
+
+- P1: Spec violation, broken functionality
+- P2: Accessibility issue, inconsistency
+- P3: Polish, minor improvements
+
+If spec is ambiguous or conflicts with implementation:
+
+```bash
+bd create --title="Question: <UI/UX question>" --type=task --priority=2 --label="human" --label="discovered-from:<review-bead-id>"
+```
+
+WHEN COMPLETE:
+
+1. Close your review bead: `bd close <review-bead-id> --reason="Found N issues"`
+2. Report summary of issues created
+
+REVIEW BEAD: <ux-review-bead-id>
+
+```
+
+4. **Report review launch:**
+
+```
+
+============================================================
+WAVE X REVIEW LAUNCHED
+============================================================
+
+Review Agents Deployed:
+
+1. Code Review → <bead-id>
+2. Security Review → <bead-id>
+3. UI/UX Review → <bead-id>
+
+Monitor progress: /tasks
+
+# When all 3 complete, run: /army deploy-fixes <wave>
+
+````
+
+---
+
+## SUBCOMMAND: deploy-fixes
+
+**Usage:** `/army deploy-fixes <wave-number>`
+
+### Purpose
+
+Fix all issues discovered by reviews (except `human`-tagged questions).
+
+### Instructions
+
+1. **Find all discovered issues for this wave's checkpoint:**
+
+```bash
+bd list --label="discovered-from:buildseason-<checkpoint>" --status=open
+````
+
+Also check for issues with `review:code`, `review:security`, `review:ux` labels.
+
+2. **Separate fixable vs questions:**
+
+- **Fixable**: No `human` label - deploy agents to fix
+- **Questions**: Has `human` label - leave for human, will be in checkpoint summary
+
+3. **Check if any issues exist:**
+
+If no fixable issues:
+
+```
+============================================================
+              NO FIXES NEEDED
+============================================================
+
+Review found 0 fixable issues.
+Questions for human: X (will appear in checkpoint summary)
+
+Next: /army prepare-checkpoint <wave>
+============================================================
+```
+
+4. **Deploy fix agents in parallel:**
+
+For each fixable issue, launch an agent:
+
+```
+You are a FIX agent for BuildSeason.
+
+BEAD: <bead-id>
+ISSUE: <title>
+DISCOVERED BY: <review type>
+
+DESCRIPTION:
+<full description if any>
+
+INSTRUCTIONS:
+1. Read the relevant files
+2. Fix the specific issue described
+3. Verify fix: `bun run typecheck`
+4. Commit with message:
+   fix(<area>): <description>
+
+   Fixes: <bead-id>
+   Discovered-by: <review-bead-id>
+
+5. Close the bead: `bd close <bead-id>`
+
+CONSTRAINTS:
+- Fix ONLY this specific issue
+- Do not refactor unrelated code
+- Do not introduce new features
+- If fix is unclear, add comment to bead and leave open
+```
+
+5. **Report deployment:**
+
+```
+============================================================
+              FIX DEPLOYMENT: WAVE X
+============================================================
+
+Deployed: N fix agents
+Questions for human: M (not fixing, need input)
+
+Monitor: /tasks
+
+When complete, run: /army prepare-checkpoint <wave>
+============================================================
+```
+
+---
+
+## SUBCOMMAND: prepare-checkpoint
+
+**Usage:** `/army prepare-checkpoint <wave-number>`
+
+### Purpose
+
+Generate a markdown summary for human review and update the checkpoint bead.
+
+### Instructions
+
+1. **Gather review results:**
+
+```bash
+# Get review beads and their close reasons
+bd show <code-review-bead>
+bd show <security-review-bead>
+bd show <ux-review-bead>
+
+# Count fixed vs remaining issues
+bd list --label="review:code" --status=closed | wc -l
+bd list --label="review:code" --status=open | wc -l
+# Repeat for security, ux
+
+# Get human questions
+bd list --label="human" --status=open
+```
+
+2. **Check test status:**
+
+```bash
+bun run typecheck
+bun test 2>&1 | tail -20
+```
+
+3. **Get git summary:**
+
+```bash
+git log --oneline -20
+git diff --stat HEAD~20
+```
+
+4. **Generate checkpoint summary markdown:**
+
+Create file: `docs/checkpoints/cp<N>-wave<W>-summary.md`
+
+```markdown
+# Checkpoint <N>: Wave <W> Review Summary
+
+Generated: <timestamp>
+
+## Review Results
+
+| Review Type | Issues Found | Fixed | Remaining | Questions |
+| ----------- | ------------ | ----- | --------- | --------- |
+| Code        | X            | Y     | Z         | Q         |
+| Security    | X            | Y     | Z         | Q         |
+| UI/UX       | X            | Y     | Z         | Q         |
+| **Total**   | X            | Y     | Z         | Q         |
+
+## Security Findings
+
+> **Note**: Security issues are highlighted for visibility. Review these to identify patterns that may need standing instruction updates.
+
+| Issue         | Priority | Status | Bead            |
+| ------------- | -------- | ------ | --------------- |
+| <description> | P1       | Fixed  | buildseason-xyz |
+| <description> | P0       | Fixed  | buildseason-abc |
+
+## Questions Requiring Human Input
+
+The following items need your decision before proceeding:
+
+### 1. <Question title> (buildseason-xyz)
+
+<Question details from bead description>
+
+**To resolve**: Update the bead with your decision and remove the `human` label.
+
+### 2. <Question title> (buildseason-abc)
+
+...
+
+## Unfixed Issues (Deferred)
+
+These issues were identified but not fixed (P3-P4 or blocked):
+
+| Issue   | Priority | Reason       | Bead            |
+| ------- | -------- | ------------ | --------------- |
+| <title> | P4       | Low priority | buildseason-xyz |
+
+## Key Changes Made
+
+Summary of significant changes in this wave:
+
+- **<Area>**: <Description of changes>
+- **<Area>**: <Description of changes>
+
+## Test Status
+```
+
+Typecheck: PASS/FAIL
+Tests: X passing, Y failing
+Coverage: Z% (if available)
+
+```
+
+## Files Changed
+
+<output of git diff --stat>
+
+## Human Review Checklist
+
+- [ ] Review security findings above
+- [ ] Answer questions in "Questions Requiring Human Input"
+- [ ] Run `bun dev` and test core flows
+- [ ] Check mobile responsive behavior
+- [ ] Verify any auth changes work correctly
+
+## Next Steps
+
+When satisfied:
+1. Answer any questions (update beads, remove `human` label)
+2. Close checkpoint: `bd close buildseason-<checkpoint-id>`
+3. Deploy next wave: `/army deploy <next-wave>`
+```
+
+5. **Update checkpoint bead with summary link:**
+
+```bash
+bd comment <checkpoint-bead> "Review summary generated: docs/checkpoints/cp<N>-wave<W>-summary.md"
+```
+
+6. **Commit, sync, and push:**
+
+```bash
+git add -A
+git commit -m "chore: prepare checkpoint N for human review
+
+- Generated review summary: docs/checkpoints/cpN-waveW-summary.md
+- Code review: X issues found, Y fixed
+- Security review: X issues found, Y fixed
+- UI/UX review: X issues found, Y fixed
+
+Ready for human review."
+
+bd sync
+git push
+```
+
+7. **Start dev servers for human review:**
+
+```bash
+# Start in background so human can test immediately
+cd /Users/caryden/github/buildseason && bun dev
+```
+
+Note: Run dev server in background or inform human to start it.
+
+8. **Report completion:**
+
+```
+============================================================
+         CHECKPOINT PREPARED FOR HUMAN REVIEW
+============================================================
+
+Summary: docs/checkpoints/cp<N>-wave<W>-summary.md
+
+Review Results:
+  Code:     X found, Y fixed, Z remaining
+  Security: X found, Y fixed, Z remaining
+  UI/UX:    X found, Y fixed, Z remaining
+
+Questions for you: N items need your input
+  → See "Questions Requiring Human Input" section
+
 NEXT STEPS:
-------------------------------------------------------------
-If review passes:
-  1. Merge feature branches to main
-  2. Close checkpoint: bd close buildseason-<checkpoint-id>
-  3. Deploy next wave: /army deploy <next-wave>
-
-If issues found:
-  1. Note specific problems
-  2. Create fix beads or re-run agents
+1. Read the summary document
+2. Answer any questions (update beads, remove 'human' label)
+3. When satisfied: bd close <checkpoint-bead>
+4. Then: /army deploy <next-wave>
 ============================================================
 ```
 
@@ -279,6 +759,21 @@ If issues found:
 | CP2: Navigation Review  | buildseason-2zlp | 1          | Wave 2  |
 | CP3: Core UX Review     | buildseason-z942 | 2          | Wave 3  |
 | CP4: Integration Review | buildseason-4a5n | 3          | Wave 4+ |
+
+---
+
+## Reference: Label Conventions
+
+| Label                       | Meaning                             |
+| --------------------------- | ----------------------------------- |
+| `discovered-from:<bead-id>` | Issue was found by this review bead |
+| `review:code`               | Found during code review            |
+| `review:security`           | Found during security review        |
+| `review:ux`                 | Found during UI/UX review           |
+| `human`                     | Needs human decision/clarification  |
+| `model:opus`                | Use Opus model for this task        |
+| `model:sonnet`              | Use Sonnet model for this task      |
+| `model:haiku`               | Use Haiku model for this task       |
 
 ---
 

@@ -1,23 +1,37 @@
 # Vendor Stock & Pricing Harvesting System
+
 ## Implementation Specification
 
 **Version:** 1.0
-**Date:** December 30, 2024
+**Date:** December 30, 2025
 **Status:** Draft
-**Related Document:** [specification.md](./specification.md)
+**Companion Documents:** [specification.md](./specification.md), [ui-refocus-spec.md](./ui-refocus-spec.md)
+
+> **UI Integration:** See [ui-refocus-spec.md](./ui-refocus-spec.md) — Vendor stock status surfaces in Parts inventory, BOM pages, and Action Center Dashboard alerts.
 
 ---
 
 ## Executive Summary
 
-This document specifies the implementation of an automated vendor stock and pricing harvesting system using Temporal.io for workflow orchestration. The system efficiently monitors product availability, pricing, and lead times from FTC/FRC robotics vendors and intelligently updates the BuildSeason database.
+This document specifies the vendor catalog and product data system for BuildSeason. The primary goal is **minimizing data entry friction** — paste a link, get all product details automatically.
+
+**Philosophy: On-Demand First, Monitoring Later**
+
+Rather than heavy upfront scraping of vendor catalogs, we take an on-demand approach:
+
+1. User pastes a product URL → system extracts SKU, name, price, image, stock status
+2. Part referenced in OnShape BOM → system fetches details automatically
+3. Cross-team caching → if Team A fetches a goBILDA part, Team B benefits from cached data
+4. Intelligent refresh → check stock/price when part is actively being ordered or is on a BOM
 
 **Key Design Decisions:**
-- **Temporal.io** for durable workflow orchestration with scheduling, retries, and visibility
-- **Tiered vendor strategy** — Different approaches for core robotics vendors vs. general suppliers
-- **URL-based part intake** — Paste a product link, system auto-extracts all details
-- **Schema.org extraction** — Leverage structured data (JSON-LD) when available
-- **Playwright browser automation** — Handle JavaScript-rendered content and anti-bot measures
+
+- **Link-drop intake** — Paste a product URL, system auto-extracts all details
+- **Cross-team caching** — Vendor catalog items shared across all teams
+- **Schema.org extraction** — Leverage structured data (JSON-LD) when available (most Shopify stores)
+- **Direct API partnerships** — Work with goBILDA, REV for official data feeds (in progress)
+- **Lazy refresh** — Check stock/price on-demand, not scheduled scraping
+- **Temporal.io** — For async extraction jobs and future monitoring workflows
 
 ---
 
@@ -57,46 +71,46 @@ This document specifies the implementation of an automated vendor stock and pric
 
 ## 2. Vendor Tiers & Strategies
 
-### Tier 1: Core FTC/FRC Vendors (Full Catalog Sync)
+### Tier 1: Core FTC/FRC Vendors (API Partnership Target)
 
-These vendors represent 80%+ of typical team purchases. We maintain a complete product catalog and check stock/pricing regularly.
+These vendors represent 80%+ of typical team purchases. We're pursuing direct API partnerships for official data.
 
-| Vendor | Website | Estimated Products | Update Frequency |
-|--------|---------|-------------------|------------------|
-| REV Robotics | revrobotics.com | ~500 | Every 6 hours |
-| goBILDA | gobilda.com | ~1,500 | Every 6 hours |
-| AndyMark | andymark.com | ~2,000 | Every 6 hours |
-| ServoCity | servocity.com | ~3,000 | Every 12 hours |
+| Vendor       | Website         | Extraction Method | API Status              |
+| ------------ | --------------- | ----------------- | ----------------------- |
+| REV Robotics | revrobotics.com | Schema.org + API  | Partnership in progress |
+| goBILDA      | gobilda.com     | Schema.org + API  | Partnership in progress |
+| AndyMark     | andymark.com    | Schema.org        | On-demand extraction    |
+| ServoCity    | servocity.com   | Schema.org        | On-demand extraction    |
 
 **Strategy:**
-- Nightly full catalog sync (discover new/discontinued products)
-- 6-hour incremental checks for stock and price changes on popular items
-- Priority refresh for items on any team's BOM or recent orders
 
-### Tier 2: Electronics & Components (Selective Sync)
+- On-demand extraction when user pastes link or OnShape references part
+- Cross-team caching (vendor catalog items are global)
+- Direct API integration when partnerships are established
+- Lazy refresh: re-fetch when part is on active order or BOM
 
-Larger catalogs where we sync only robotics-relevant categories.
+### Tier 2: Electronics & Components (On-Demand)
 
-| Vendor | Website | Strategy |
-|--------|---------|----------|
-| SparkFun | sparkfun.com | Robotics category only (~200 items) |
-| Adafruit | adafruit.com | Motors, servos, sensors (~300 items) |
-| Pololu | pololu.com | Full catalog (robotics-focused) |
-| DigiKey | digikey.com | On-demand only (too large) |
-| Mouser | mouser.com | On-demand only (too large) |
+| Vendor   | Website      | Extraction Method        |
+| -------- | ------------ | ------------------------ |
+| SparkFun | sparkfun.com | Schema.org (Shopify)     |
+| Adafruit | adafruit.com | Schema.org (Shopify)     |
+| Pololu   | pololu.com   | Schema.org               |
+| DigiKey  | digikey.com  | On-demand, API available |
+| Mouser   | mouser.com   | On-demand, API available |
 
-### Tier 3: General Suppliers (On-Demand Only)
+### Tier 3: General Suppliers (On-Demand)
 
-These vendors have massive catalogs. We only fetch data when a team explicitly adds a part.
+| Vendor        | Website       | Extraction Method       | Notes                             |
+| ------------- | ------------- | ----------------------- | --------------------------------- |
+| McMaster-Carr | mcmaster.com  | Official API            | Requires approved customer status |
+| Amazon        | amazon.com    | Product Advertising API | Rate limited                      |
+| Home Depot    | homedepot.com | Schema.org              | On-demand only                    |
 
-| Vendor | Website | API Available? | Notes |
-|--------|---------|---------------|-------|
-| McMaster-Carr | mcmaster.com | **Yes** | Official Product Information API |
-| Amazon | amazon.com | No | Complex anti-bot, use Product Advertising API |
-| Home Depot | homedepot.com | No | On-demand scraping only |
-| Grainger | grainger.com | No | On-demand scraping only |
+**All tiers use on-demand extraction** — no scheduled crawling until we have API partnerships or clear need.
 
 **McMaster-Carr API Details:**
+
 - Official API available at https://www.mcmaster.com/help/api/
 - Requires approved customer status
 - Provides product specs, pricing, availability
@@ -105,10 +119,10 @@ These vendors have massive catalogs. We only fetch data when a team explicitly a
 
 ### Tier 4: International Vendors (Phase 3)
 
-| Vendor | Region | Website |
-|--------|--------|---------|
-| The Robot Space | UK/EU | therobot.space |
-| RobotShop | Global | robotshop.com |
+| Vendor          | Region | Website        |
+| --------------- | ------ | -------------- |
+| The Robot Space | UK/EU  | therobot.space |
+| RobotShop       | Global | robotshop.com  |
 
 ---
 
@@ -154,23 +168,25 @@ These vendors have massive catalogs. We only fetch data when a team explicitly a
 
 ### Technology Stack
 
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| Workflow Engine | Temporal.io | Durable execution, scheduling, visibility |
-| Browser Automation | Playwright | Better reliability than Puppeteer (96% vs 75%) |
-| API Client | Native fetch | For vendors with APIs |
-| Database | Turso (SQLite) | Existing stack, good performance |
-| Queue/Cache | None (Phase 1) | Temporal handles state |
+| Component          | Technology     | Rationale                                      |
+| ------------------ | -------------- | ---------------------------------------------- |
+| Workflow Engine    | Temporal.io    | Durable execution, scheduling, visibility      |
+| Browser Automation | Playwright     | Better reliability than Puppeteer (96% vs 75%) |
+| API Client         | Native fetch   | For vendors with APIs                          |
+| Database           | Turso (SQLite) | Existing stack, good performance               |
+| Queue/Cache        | None (Phase 1) | Temporal handles state                         |
 
 ### Temporal Deployment Options
 
 **Option A: Temporal Cloud (Recommended for Phase 1)**
+
 - Zero ops burden
 - Consumption-based pricing
 - $6,000 startup credits available
 - Actions Per Second (APS) scaling
 
 **Option B: Self-Hosted on Fly.io**
+
 - Lower cost at scale
 - More operational complexity
 - Requires PostgreSQL/MySQL + 4 services
@@ -186,26 +202,28 @@ Runs nightly to discover new products, discontinued items, and maintain catalog 
 
 ```typescript
 // workflows/catalogSync.ts
-import { proxyActivities, sleep } from '@temporalio/workflow';
-import type * as activities from '../activities/catalog';
+import { proxyActivities, sleep } from "@temporalio/workflow";
+import type * as activities from "../activities/catalog";
 
 const {
   fetchVendorSitemap,
   scrapeProductPage,
   upsertCatalogItem,
   markDiscontinued,
-  notifyNewProducts
+  notifyNewProducts,
 } = proxyActivities<typeof activities>({
-  startToCloseTimeout: '5 minutes',
+  startToCloseTimeout: "5 minutes",
   retry: {
-    initialInterval: '10 seconds',
+    initialInterval: "10 seconds",
     backoffCoefficient: 2,
-    maximumInterval: '5 minutes',
+    maximumInterval: "5 minutes",
     maximumAttempts: 3,
   },
 });
 
-export async function catalogSyncWorkflow(vendorId: string): Promise<CatalogSyncResult> {
+export async function catalogSyncWorkflow(
+  vendorId: string
+): Promise<CatalogSyncResult> {
   const stats = { added: 0, updated: 0, discontinued: 0 };
 
   // Fetch all product URLs from vendor
@@ -213,14 +231,14 @@ export async function catalogSyncWorkflow(vendorId: string): Promise<CatalogSync
 
   // Process in batches to avoid overwhelming vendor
   const BATCH_SIZE = 10;
-  const BATCH_DELAY = '30 seconds';
+  const BATCH_DELAY = "30 seconds";
 
   for (let i = 0; i < productUrls.length; i += BATCH_SIZE) {
     const batch = productUrls.slice(i, i + BATCH_SIZE);
 
     // Scrape batch in parallel
     const results = await Promise.all(
-      batch.map(url => scrapeProductPage(vendorId, url))
+      batch.map((url) => scrapeProductPage(vendorId, url))
     );
 
     // Update database
@@ -257,27 +275,27 @@ import {
   proxyActivities,
   defineSignal,
   setHandler,
-  condition
-} from '@temporalio/workflow';
+  condition,
+} from "@temporalio/workflow";
 
 const {
   getWatchedItems,
   checkItemStock,
   recordPriceChange,
   recordStockChange,
-  sendStockAlert
+  sendStockAlert,
 } = proxyActivities<typeof activities>({
-  startToCloseTimeout: '2 minutes',
+  startToCloseTimeout: "2 minutes",
   retry: {
-    initialInterval: '5 seconds',
+    initialInterval: "5 seconds",
     backoffCoefficient: 2,
-    maximumInterval: '1 minute',
+    maximumInterval: "1 minute",
     maximumAttempts: 5,
   },
 });
 
 // Signal to force immediate check
-export const forceCheckSignal = defineSignal<[string]>('forceCheck');
+export const forceCheckSignal = defineSignal<[string]>("forceCheck");
 
 export async function stockMonitorWorkflow(vendorId: string): Promise<void> {
   let forceCheckSku: string | null = null;
@@ -300,7 +318,7 @@ export async function stockMonitorWorkflow(vendorId: string): Promise<void> {
       // Alert if price increased significantly (>10%)
       if (current.priceCents > item.lastPriceCents * 1.1) {
         await sendStockAlert({
-          type: 'price_increase',
+          type: "price_increase",
           item,
           oldPrice: item.lastPriceCents,
           newPrice: current.priceCents,
@@ -315,7 +333,7 @@ export async function stockMonitorWorkflow(vendorId: string): Promise<void> {
       // Alert on out-of-stock for watched items
       if (!current.inStock && item.isWatched) {
         await sendStockAlert({
-          type: 'out_of_stock',
+          type: "out_of_stock",
           item,
           estimatedRestock: current.estimatedRestock,
         });
@@ -324,7 +342,7 @@ export async function stockMonitorWorkflow(vendorId: string): Promise<void> {
       // Alert on back-in-stock
       if (current.inStock && !item.lastInStock) {
         await sendStockAlert({
-          type: 'back_in_stock',
+          type: "back_in_stock",
           item,
         });
       }
@@ -350,7 +368,8 @@ export async function urlImportWorkflow(
   if (!vendor) {
     return {
       success: false,
-      error: 'Unknown vendor. Supported: REV, goBILDA, AndyMark, McMaster-Carr, etc.'
+      error:
+        "Unknown vendor. Supported: REV, goBILDA, AndyMark, McMaster-Carr, etc.",
     };
   }
 
@@ -363,7 +382,7 @@ export async function urlImportWorkflow(
     return {
       success: true,
       product: refreshed,
-      source: 'catalog',
+      source: "catalog",
     };
   }
 
@@ -373,7 +392,7 @@ export async function urlImportWorkflow(
   if (!scraped) {
     return {
       success: false,
-      error: 'Could not extract product data from URL',
+      error: "Could not extract product data from URL",
     };
   }
 
@@ -396,7 +415,7 @@ export async function urlImportWorkflow(
   return {
     success: true,
     product: scraped,
-    source: 'scraped',
+    source: "scraped",
   };
 }
 ```
@@ -405,25 +424,25 @@ export async function urlImportWorkflow(
 
 ```typescript
 // worker/schedules.ts
-import { Client, ScheduleClient } from '@temporalio/client';
+import { Client, ScheduleClient } from "@temporalio/client";
 
 export async function setupSchedules(client: Client) {
   const scheduleClient = new ScheduleClient(client.connection);
 
   // Tier 1 vendors: Catalog sync nightly at 3 AM
-  const tier1Vendors = ['rev-robotics', 'gobilda', 'andymark', 'servocity'];
+  const tier1Vendors = ["rev-robotics", "gobilda", "andymark", "servocity"];
 
   for (const vendorId of tier1Vendors) {
     await scheduleClient.create({
       scheduleId: `catalog-sync-${vendorId}`,
       spec: {
-        cronExpressions: ['0 3 * * *'], // 3 AM daily
+        cronExpressions: ["0 3 * * *"], // 3 AM daily
       },
       action: {
-        type: 'startWorkflow',
-        workflowType: 'catalogSyncWorkflow',
+        type: "startWorkflow",
+        workflowType: "catalogSyncWorkflow",
         args: [vendorId],
-        taskQueue: 'stock-harvesting',
+        taskQueue: "stock-harvesting",
       },
     });
   }
@@ -433,31 +452,31 @@ export async function setupSchedules(client: Client) {
     await scheduleClient.create({
       scheduleId: `stock-monitor-${vendorId}`,
       spec: {
-        cronExpressions: ['0 */6 * * *'], // Every 6 hours
+        cronExpressions: ["0 */6 * * *"], // Every 6 hours
       },
       action: {
-        type: 'startWorkflow',
-        workflowType: 'stockMonitorWorkflow',
+        type: "startWorkflow",
+        workflowType: "stockMonitorWorkflow",
         args: [vendorId],
-        taskQueue: 'stock-harvesting',
+        taskQueue: "stock-harvesting",
       },
     });
   }
 
   // Tier 2 vendors: Less frequent
-  const tier2Vendors = ['sparkfun', 'adafruit', 'pololu'];
+  const tier2Vendors = ["sparkfun", "adafruit", "pololu"];
 
   for (const vendorId of tier2Vendors) {
     await scheduleClient.create({
       scheduleId: `stock-monitor-${vendorId}`,
       spec: {
-        cronExpressions: ['0 */12 * * *'], // Every 12 hours
+        cronExpressions: ["0 */12 * * *"], // Every 12 hours
       },
       action: {
-        type: 'startWorkflow',
-        workflowType: 'stockMonitorWorkflow',
+        type: "startWorkflow",
+        workflowType: "stockMonitorWorkflow",
         args: [vendorId],
-        taskQueue: 'stock-harvesting',
+        taskQueue: "stock-harvesting",
       },
     });
   }
@@ -474,26 +493,28 @@ Most e-commerce sites include structured data for SEO. This is the cleanest extr
 
 ```typescript
 // activities/extractors/jsonld.ts
-import { Page } from 'playwright';
+import { Page } from "playwright";
 
 interface ProductSchema {
-  '@type': 'Product';
+  "@type": "Product";
   name: string;
   sku?: string;
   image?: string | string[];
   description?: string;
-  offers?: {
-    '@type': 'Offer' | 'AggregateOffer';
-    price: number | string;
-    priceCurrency: string;
-    availability: string;
-    itemCondition?: string;
-  } | Array<{
-    '@type': 'Offer';
-    price: number | string;
-    priceCurrency: string;
-    availability: string;
-  }>;
+  offers?:
+    | {
+        "@type": "Offer" | "AggregateOffer";
+        price: number | string;
+        priceCurrency: string;
+        availability: string;
+        itemCondition?: string;
+      }
+    | Array<{
+        "@type": "Offer";
+        price: number | string;
+        priceCurrency: string;
+        availability: string;
+      }>;
 }
 
 export async function extractJsonLd(page: Page): Promise<ProductSchema | null> {
@@ -507,10 +528,10 @@ export async function extractJsonLd(page: Page): Promise<ProductSchema | null> {
       const data = JSON.parse(content);
 
       // Handle @graph structure
-      const items = data['@graph'] || [data];
+      const items = data["@graph"] || [data];
 
       for (const item of items) {
-        if (item['@type'] === 'Product') {
+        if (item["@type"] === "Product") {
           return item as ProductSchema;
         }
       }
@@ -524,25 +545,31 @@ export async function extractJsonLd(page: Page): Promise<ProductSchema | null> {
 
 export function parseAvailability(availability: string): {
   inStock: boolean;
-  stockLevel: 'in-stock' | 'low-stock' | 'out-of-stock' | 'discontinued';
+  stockLevel: "in-stock" | "low-stock" | "out-of-stock" | "discontinued";
 } {
   const normalized = availability.toLowerCase();
 
-  if (normalized.includes('instock') || normalized.includes('in_stock')) {
-    return { inStock: true, stockLevel: 'in-stock' };
+  if (normalized.includes("instock") || normalized.includes("in_stock")) {
+    return { inStock: true, stockLevel: "in-stock" };
   }
-  if (normalized.includes('limitedavailability') || normalized.includes('lowstock')) {
-    return { inStock: true, stockLevel: 'low-stock' };
+  if (
+    normalized.includes("limitedavailability") ||
+    normalized.includes("lowstock")
+  ) {
+    return { inStock: true, stockLevel: "low-stock" };
   }
-  if (normalized.includes('outofstock') || normalized.includes('out_of_stock')) {
-    return { inStock: false, stockLevel: 'out-of-stock' };
+  if (
+    normalized.includes("outofstock") ||
+    normalized.includes("out_of_stock")
+  ) {
+    return { inStock: false, stockLevel: "out-of-stock" };
   }
-  if (normalized.includes('discontinued')) {
-    return { inStock: false, stockLevel: 'discontinued' };
+  if (normalized.includes("discontinued")) {
+    return { inStock: false, stockLevel: "discontinued" };
   }
 
   // Default to in-stock if unrecognized
-  return { inStock: true, stockLevel: 'in-stock' };
+  return { inStock: true, stockLevel: "in-stock" };
 }
 ```
 
@@ -552,17 +579,16 @@ When JSON-LD is incomplete or unavailable, use vendor-specific selectors.
 
 ```typescript
 // activities/extractors/vendors/rev-robotics.ts
-import { Page } from 'playwright';
+import { Page } from "playwright";
 
 export async function extractRevRoboticsProduct(page: Page, url: string) {
   // REV uses a standard Shopify-like structure
 
   // Wait for product content to load
-  await page.waitForSelector('.product-single__title', { timeout: 10000 });
+  await page.waitForSelector(".product-single__title", { timeout: 10000 });
 
-  const name = await page.$eval(
-    '.product-single__title',
-    el => el.textContent?.trim()
+  const name = await page.$eval(".product-single__title", (el) =>
+    el.textContent?.trim()
   );
 
   // SKU is in the URL pattern: /rev-XX-XXXX/
@@ -570,27 +596,24 @@ export async function extractRevRoboticsProduct(page: Page, url: string) {
   const sku = skuMatch ? `REV-${skuMatch[1]}` : null;
 
   // Price
-  const priceText = await page.$eval(
-    '.product__price',
-    el => el.textContent?.trim()
+  const priceText = await page.$eval(".product__price", (el) =>
+    el.textContent?.trim()
   );
   const priceCents = parsePriceToCents(priceText);
 
   // Stock status
-  const addToCartButton = await page.$('.product-form__add-button');
+  const addToCartButton = await page.$(".product-form__add-button");
   const buttonText = await addToCartButton?.textContent();
-  const inStock = buttonText?.toLowerCase().includes('add to cart') ?? false;
+  const inStock = buttonText?.toLowerCase().includes("add to cart") ?? false;
 
   // Image
-  const imageUrl = await page.$eval(
-    '.product-single__photo img',
-    el => el.getAttribute('src')
+  const imageUrl = await page.$eval(".product-single__photo img", (el) =>
+    el.getAttribute("src")
   );
 
   // Description
-  const description = await page.$eval(
-    '.product-single__description',
-    el => el.textContent?.trim()
+  const description = await page.$eval(".product-single__description", (el) =>
+    el.textContent?.trim()
   );
 
   return {
@@ -598,7 +621,7 @@ export async function extractRevRoboticsProduct(page: Page, url: string) {
     sku,
     priceCents,
     inStock,
-    stockLevel: inStock ? 'in-stock' : 'out-of-stock',
+    stockLevel: inStock ? "in-stock" : "out-of-stock",
     imageUrl,
     description,
     productUrl: url,
@@ -608,44 +631,43 @@ export async function extractRevRoboticsProduct(page: Page, url: string) {
 
 ```typescript
 // activities/extractors/vendors/gobilda.ts
-import { Page } from 'playwright';
+import { Page } from "playwright";
 
 export async function extractGoBildaProduct(page: Page, url: string) {
   // goBILDA uses BigCommerce
 
-  await page.waitForSelector('.productView-title', { timeout: 10000 });
+  await page.waitForSelector(".productView-title", { timeout: 10000 });
 
-  const name = await page.$eval(
-    '.productView-title',
-    el => el.textContent?.trim()
+  const name = await page.$eval(".productView-title", (el) =>
+    el.textContent?.trim()
   );
 
   // SKU from page
   const sku = await page.$eval(
-    '.productView-info-value[data-product-sku]',
-    el => el.textContent?.trim()
+    ".productView-info-value[data-product-sku]",
+    (el) => el.textContent?.trim()
   );
 
   // Price (handle sale prices)
   const priceText = await page.$eval(
-    '.productView-price .price--withoutTax',
-    el => el.textContent?.trim()
+    ".productView-price .price--withoutTax",
+    (el) => el.textContent?.trim()
   );
   const priceCents = parsePriceToCents(priceText);
 
   // Stock
   const stockText = await page.$eval(
-    '.productView-info-value[data-product-stock]',
-    el => el.textContent?.trim()
+    ".productView-info-value[data-product-stock]",
+    (el) => el.textContent?.trim()
   );
-  const inStock = !stockText?.toLowerCase().includes('out of stock');
+  const inStock = !stockText?.toLowerCase().includes("out of stock");
 
   return {
     name,
     sku,
     priceCents,
     inStock,
-    stockLevel: inStock ? 'in-stock' : 'out-of-stock',
+    stockLevel: inStock ? "in-stock" : "out-of-stock",
     productUrl: url,
   };
 }
@@ -655,11 +677,11 @@ export async function extractGoBildaProduct(page: Page, url: string) {
 
 ```typescript
 // activities/extractors/vendors/mcmaster.ts
-import { createClient, ClientCertificateCredential } from './mcmaster-client';
+import { createClient, ClientCertificateCredential } from "./mcmaster-client";
 
 export async function fetchMcMasterProduct(partNumber: string) {
   const client = createClient({
-    baseUrl: 'https://api.mcmaster.com/v1/',
+    baseUrl: "https://api.mcmaster.com/v1/",
     credential: new ClientCertificateCredential(
       process.env.MCMASTER_CERT_PATH!,
       process.env.MCMASTER_KEY_PATH!
@@ -673,7 +695,7 @@ export async function fetchMcMasterProduct(partNumber: string) {
     sku: product.partNumber,
     description: product.longDescription,
     priceCents: Math.round(product.price * 100),
-    inStock: product.availability === 'IN_STOCK',
+    inStock: product.availability === "IN_STOCK",
     stockLevel: mapAvailability(product.availability),
     leadTimeDays: product.leadTimeDays,
     specs: product.specifications,
@@ -687,7 +709,7 @@ export async function fetchMcMasterProduct(partNumber: string) {
 
 ```typescript
 // activities/browser/pool.ts
-import { chromium, Browser, BrowserContext } from 'playwright';
+import { chromium, Browser, BrowserContext } from "playwright";
 
 class BrowserPool {
   private browsers: Browser[] = [];
@@ -702,42 +724,39 @@ class BrowserPool {
     }
 
     // Get or create browser
-    let browser = this.browsers.find(b =>
-      this.getContextCount(b) < this.contextsPerBrowser
+    let browser = this.browsers.find(
+      (b) => this.getContextCount(b) < this.contextsPerBrowser
     );
 
     if (!browser && this.browsers.length < this.maxBrowsers) {
       browser = await chromium.launch({
         headless: true,
-        args: [
-          '--disable-blink-features=AutomationControlled',
-          '--no-sandbox',
-        ],
+        args: ["--disable-blink-features=AutomationControlled", "--no-sandbox"],
       });
       this.browsers.push(browser);
     }
 
     if (!browser) {
-      throw new Error('Browser pool exhausted');
+      throw new Error("Browser pool exhausted");
     }
 
     // Create context with stealth settings
     const context = await browser.newContext({
       userAgent: this.getRandomUserAgent(),
       viewport: { width: 1920, height: 1080 },
-      locale: 'en-US',
-      timezoneId: 'America/New_York',
+      locale: "en-US",
+      timezoneId: "America/New_York",
     });
 
     // Add stealth scripts
     await context.addInitScript(() => {
       // Hide webdriver
-      Object.defineProperty(navigator, 'webdriver', {
+      Object.defineProperty(navigator, "webdriver", {
         get: () => undefined,
       });
 
       // Mock plugins
-      Object.defineProperty(navigator, 'plugins', {
+      Object.defineProperty(navigator, "plugins", {
         get: () => [1, 2, 3, 4, 5],
       });
     });
@@ -748,9 +767,9 @@ class BrowserPool {
 
   private getRandomUserAgent(): string {
     const userAgents = [
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
     ];
     return userAgents[Math.floor(Math.random() * userAgents.length)];
   }
@@ -786,11 +805,9 @@ export interface VendorPattern {
 
 export const vendorPatterns: VendorPattern[] = [
   {
-    id: 'rev-robotics',
-    name: 'REV Robotics',
-    urlPatterns: [
-      /^https?:\/\/(www\.)?revrobotics\.com\//,
-    ],
+    id: "rev-robotics",
+    name: "REV Robotics",
+    urlPatterns: [/^https?:\/\/(www\.)?revrobotics\.com\//],
     skuExtractor: (url) => {
       const match = url.match(/\/rev-(\d{2}-\d{4})/i);
       return match ? `REV-${match[1]}` : null;
@@ -798,11 +815,9 @@ export const vendorPatterns: VendorPattern[] = [
     tier: 1,
   },
   {
-    id: 'gobilda',
-    name: 'goBILDA',
-    urlPatterns: [
-      /^https?:\/\/(www\.)?gobilda\.com\//,
-    ],
+    id: "gobilda",
+    name: "goBILDA",
+    urlPatterns: [/^https?:\/\/(www\.)?gobilda\.com\//],
     skuExtractor: (url) => {
       // goBILDA uses product names in URL, SKU is on page
       return null;
@@ -810,23 +825,19 @@ export const vendorPatterns: VendorPattern[] = [
     tier: 1,
   },
   {
-    id: 'andymark',
-    name: 'AndyMark',
-    urlPatterns: [
-      /^https?:\/\/(www\.)?andymark\.com\//,
-    ],
+    id: "andymark",
+    name: "AndyMark",
+    urlPatterns: [/^https?:\/\/(www\.)?andymark\.com\//],
     skuExtractor: (url) => {
       const match = url.match(/\/products\/am-\d+/i);
-      return match ? match[0].replace('/products/', '').toUpperCase() : null;
+      return match ? match[0].replace("/products/", "").toUpperCase() : null;
     },
     tier: 1,
   },
   {
-    id: 'mcmaster',
-    name: 'McMaster-Carr',
-    urlPatterns: [
-      /^https?:\/\/(www\.)?mcmaster\.com\//,
-    ],
+    id: "mcmaster",
+    name: "McMaster-Carr",
+    urlPatterns: [/^https?:\/\/(www\.)?mcmaster\.com\//],
     skuExtractor: (url) => {
       // McMaster URLs end with part number
       const match = url.match(/\/(\d{4,}[A-Z]\d+)$/);
@@ -835,8 +846,8 @@ export const vendorPatterns: VendorPattern[] = [
     tier: 3,
   },
   {
-    id: 'amazon',
-    name: 'Amazon',
+    id: "amazon",
+    name: "Amazon",
     urlPatterns: [
       /^https?:\/\/(www\.)?amazon\.com\//,
       /^https?:\/\/amzn\.(to|com)\//,
@@ -865,9 +876,9 @@ export function identifyVendorFromUrl(url: string): VendorPattern | null {
 
 ```typescript
 // routes/api/parts/import.ts
-import { Hono } from 'hono';
-import { z } from 'zod';
-import { temporal } from '../../../lib/temporal';
+import { Hono } from "hono";
+import { z } from "zod";
+import { temporal } from "../../../lib/temporal";
 
 const app = new Hono();
 
@@ -877,22 +888,22 @@ const importSchema = z.object({
   quantity: z.number().int().positive().optional(),
 });
 
-app.post('/import-from-url', async (c) => {
-  const teamId = c.get('teamId');
-  const userId = c.get('userId');
+app.post("/import-from-url", async (c) => {
+  const teamId = c.get("teamId");
+  const userId = c.get("userId");
 
   const body = await c.req.json();
   const { url, addToInventory, quantity } = importSchema.parse(body);
 
   // Start workflow
-  const handle = await temporal.workflow.start('urlImportWorkflow', {
+  const handle = await temporal.workflow.start("urlImportWorkflow", {
     args: [url, teamId, userId],
-    taskQueue: 'stock-harvesting',
+    taskQueue: "stock-harvesting",
     workflowId: `url-import-${Date.now()}-${teamId}`,
   });
 
   // Wait for result (with timeout)
-  const result = await handle.result({ timeout: '30 seconds' });
+  const result = await handle.result({ timeout: "30 seconds" });
 
   if (!result.success) {
     return c.json({ error: result.error }, 400);
@@ -900,19 +911,22 @@ app.post('/import-from-url', async (c) => {
 
   // Optionally add to team inventory
   if (addToInventory && result.product) {
-    const part = await db.insert(parts).values({
-      id: generateId(),
-      teamId,
-      vendorId: result.product.vendorId,
-      name: result.product.name,
-      sku: result.product.sku,
-      description: result.product.description,
-      quantity: quantity ?? 0,
-      unitPriceCents: result.product.priceCents,
-      imageUrl: result.product.imageUrl,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).returning();
+    const part = await db
+      .insert(parts)
+      .values({
+        id: generateId(),
+        teamId,
+        vendorId: result.product.vendorId,
+        name: result.product.name,
+        sku: result.product.sku,
+        description: result.product.description,
+        quantity: quantity ?? 0,
+        unitPriceCents: result.product.priceCents,
+        imageUrl: result.product.imageUrl,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
 
     return c.json({
       success: true,
@@ -1130,67 +1144,93 @@ ALTER TABLE vendors ADD COLUMN harvest_error TEXT;
 
 ```typescript
 // db/schema/catalog.ts
-import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core';
-import { vendors, teams, users } from './core';
+import { sqliteTable, text, integer, unique } from "drizzle-orm/sqlite-core";
+import { vendors, teams, users } from "./core";
 
-export const vendorCatalogItems = sqliteTable('vendor_catalog_items', {
-  id: text('id').primaryKey(),
-  vendorId: text('vendor_id').notNull().references(() => vendors.id),
-  sku: text('sku').notNull(),
-  name: text('name').notNull(),
-  description: text('description'),
-  category: text('category'),
+export const vendorCatalogItems = sqliteTable(
+  "vendor_catalog_items",
+  {
+    id: text("id").primaryKey(),
+    vendorId: text("vendor_id")
+      .notNull()
+      .references(() => vendors.id),
+    sku: text("sku").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    category: text("category"),
 
-  priceCents: integer('price_cents').notNull(),
-  originalPriceCents: integer('original_price_cents'),
-  priceCurrency: text('price_currency').default('USD'),
+    priceCents: integer("price_cents").notNull(),
+    originalPriceCents: integer("original_price_cents"),
+    priceCurrency: text("price_currency").default("USD"),
 
-  inStock: integer('in_stock', { mode: 'boolean' }).notNull().default(true),
-  stockLevel: text('stock_level').$type<'in-stock' | 'low-stock' | 'out-of-stock' | 'discontinued'>(),
-  leadTimeDays: integer('lead_time_days'),
+    inStock: integer("in_stock", { mode: "boolean" }).notNull().default(true),
+    stockLevel: text("stock_level").$type<
+      "in-stock" | "low-stock" | "out-of-stock" | "discontinued"
+    >(),
+    leadTimeDays: integer("lead_time_days"),
 
-  imageUrl: text('image_url'),
-  productUrl: text('product_url').notNull(),
+    imageUrl: text("image_url"),
+    productUrl: text("product_url").notNull(),
 
-  specs: text('specs', { mode: 'json' }),
-  relatedSkus: text('related_skus', { mode: 'json' }).$type<string[]>(),
+    specs: text("specs", { mode: "json" }),
+    relatedSkus: text("related_skus", { mode: "json" }).$type<string[]>(),
 
-  lastScrapedAt: integer('last_scraped_at', { mode: 'timestamp' }).notNull(),
-  scrapeSuccess: integer('scrape_success', { mode: 'boolean' }).default(true),
-  scrapeError: text('scrape_error'),
+    lastScrapedAt: integer("last_scraped_at", { mode: "timestamp" }).notNull(),
+    scrapeSuccess: integer("scrape_success", { mode: "boolean" }).default(true),
+    scrapeError: text("scrape_error"),
 
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
-}, (table) => ({
-  vendorSkuUnique: unique().on(table.vendorId, table.sku),
-}));
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => ({
+    vendorSkuUnique: unique().on(table.vendorId, table.sku),
+  })
+);
 
-export const priceHistory = sqliteTable('price_history', {
-  id: text('id').primaryKey(),
-  catalogItemId: text('catalog_item_id').notNull()
-    .references(() => vendorCatalogItems.id, { onDelete: 'cascade' }),
-  priceCents: integer('price_cents').notNull(),
-  originalPriceCents: integer('original_price_cents'),
-  recordedAt: integer('recorded_at', { mode: 'timestamp' }).notNull(),
+export const priceHistory = sqliteTable("price_history", {
+  id: text("id").primaryKey(),
+  catalogItemId: text("catalog_item_id")
+    .notNull()
+    .references(() => vendorCatalogItems.id, { onDelete: "cascade" }),
+  priceCents: integer("price_cents").notNull(),
+  originalPriceCents: integer("original_price_cents"),
+  recordedAt: integer("recorded_at", { mode: "timestamp" }).notNull(),
 });
 
-export const watchedItems = sqliteTable('watched_items', {
-  id: text('id').primaryKey(),
-  teamId: text('team_id').notNull().references(() => teams.id, { onDelete: 'cascade' }),
-  catalogItemId: text('catalog_item_id').notNull()
-    .references(() => vendorCatalogItems.id, { onDelete: 'cascade' }),
+export const watchedItems = sqliteTable(
+  "watched_items",
+  {
+    id: text("id").primaryKey(),
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    catalogItemId: text("catalog_item_id")
+      .notNull()
+      .references(() => vendorCatalogItems.id, { onDelete: "cascade" }),
 
-  notifyPriceDrop: integer('notify_price_drop', { mode: 'boolean' }).default(true),
-  notifyPriceIncrease: integer('notify_price_increase', { mode: 'boolean' }).default(false),
-  notifyBackInStock: integer('notify_back_in_stock', { mode: 'boolean' }).default(true),
-  notifyLowStock: integer('notify_low_stock', { mode: 'boolean' }).default(true),
-  priceThresholdCents: integer('price_threshold_cents'),
+    notifyPriceDrop: integer("notify_price_drop", { mode: "boolean" }).default(
+      true
+    ),
+    notifyPriceIncrease: integer("notify_price_increase", {
+      mode: "boolean",
+    }).default(false),
+    notifyBackInStock: integer("notify_back_in_stock", {
+      mode: "boolean",
+    }).default(true),
+    notifyLowStock: integer("notify_low_stock", { mode: "boolean" }).default(
+      true
+    ),
+    priceThresholdCents: integer("price_threshold_cents"),
 
-  createdBy: text('created_by').notNull().references(() => users.id),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-}, (table) => ({
-  teamItemUnique: unique().on(table.teamId, table.catalogItemId),
-}));
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => ({
+    teamItemUnique: unique().on(table.teamId, table.catalogItemId),
+  })
+);
 ```
 
 ---
@@ -1200,11 +1240,13 @@ export const watchedItems = sqliteTable('watched_items', {
 ### Phase 1: Core Infrastructure (Week 1-2)
 
 **Goals:**
+
 - Temporal worker setup (Cloud or self-hosted)
 - URL import workflow for top 4 vendors
 - Basic catalog sync for REV Robotics
 
 **Deliverables:**
+
 - [ ] Temporal SDK integration in API
 - [ ] Worker process with Playwright browser pool
 - [ ] JSON-LD extractor
@@ -1214,17 +1256,20 @@ export const watchedItems = sqliteTable('watched_items', {
 - [ ] Basic UI for URL import
 
 **Success Criteria:**
+
 - Can paste REV Robotics URL and get product details
 - Product is added to team inventory with correct price/SKU
 
 ### Phase 2: Tier 1 Vendors (Week 3-4)
 
 **Goals:**
+
 - Full catalog sync for goBILDA, AndyMark, ServoCity
 - Scheduled stock monitoring
 - Price/stock change detection
 
 **Deliverables:**
+
 - [ ] goBILDA extractor
 - [ ] AndyMark extractor
 - [ ] ServoCity extractor
@@ -1235,6 +1280,7 @@ export const watchedItems = sqliteTable('watched_items', {
 - [ ] Price history tracking
 
 **Success Criteria:**
+
 - Nightly catalog sync runs successfully
 - Teams receive alerts when watched items go out-of-stock
 - Price changes are recorded and visible in UI
@@ -1242,11 +1288,13 @@ export const watchedItems = sqliteTable('watched_items', {
 ### Phase 3: API Integrations (Week 5-6)
 
 **Goals:**
+
 - McMaster-Carr API integration
 - Shopify Storefront API for any vendor using Shopify
 - Watch list management UI
 
 **Deliverables:**
+
 - [ ] McMaster-Carr API client (if approved)
 - [ ] Shopify Storefront API client
 - [ ] Watch list CRUD API
@@ -1254,23 +1302,27 @@ export const watchedItems = sqliteTable('watched_items', {
 - [ ] "Frequently bought together" suggestions
 
 **Success Criteria:**
+
 - McMaster-Carr products import via API
 - Teams can watch specific items for notifications
 
 ### Phase 4: Community Intelligence (Week 7-8)
 
 **Goals:**
+
 - Cross-team aggregated insights
 - Lead time tracking from actual orders
 - "Teams who buy X also buy Y"
 
 **Deliverables:**
+
 - [ ] Anonymized order data aggregation
 - [ ] Lead time calculation from order → received
 - [ ] Related products recommendation engine
 - [ ] Community dashboard (opt-in)
 
 **Success Criteria:**
+
 - Agent can suggest related products based on community data
 - Actual lead times visible per vendor/region
 
@@ -1382,13 +1434,13 @@ Response:
 
 ### Metrics to Track
 
-| Metric | Description | Alert Threshold |
-|--------|-------------|-----------------|
-| `harvest.success_rate` | % of successful scrapes | < 95% |
-| `harvest.duration_seconds` | Time to scrape a product | > 30s |
-| `catalog.stale_items` | Items not updated in 48h | > 100 |
-| `workflow.failures` | Failed Temporal workflows | > 5/hour |
-| `browser_pool.exhausted` | Pool exhaustion events | Any |
+| Metric                     | Description               | Alert Threshold |
+| -------------------------- | ------------------------- | --------------- |
+| `harvest.success_rate`     | % of successful scrapes   | < 95%           |
+| `harvest.duration_seconds` | Time to scrape a product  | > 30s           |
+| `catalog.stale_items`      | Items not updated in 48h  | > 100           |
+| `workflow.failures`        | Failed Temporal workflows | > 5/hour        |
+| `browser_pool.exhausted`   | Pool exhaustion events    | Any             |
 
 ### Discord Alert Examples
 
@@ -1420,6 +1472,7 @@ On active BOMs: 1
 ### Temporal Dashboard
 
 Use Temporal Web UI or Cloud dashboard to monitor:
+
 - Running workflows by type
 - Failed workflows with stack traces
 - Schedule execution history
@@ -1431,15 +1484,15 @@ Use Temporal Web UI or Cloud dashboard to monitor:
 
 Based on research, here's what we know about vendor platforms:
 
-| Vendor | Platform | API Available | Notes |
-|--------|----------|--------------|-------|
-| REV Robotics | Shopify-like | Possibly Storefront API | Uses standard Shopify structure |
-| goBILDA | BigCommerce | Limited | Custom scraping needed |
-| AndyMark | Custom/WooCommerce | No | Custom scraping needed |
-| ServoCity | Custom | No | Related to goBILDA |
-| McMaster-Carr | Custom | **Yes** | Official Product Information API |
-| SparkFun | Custom | Limited | RSS feeds available |
-| Adafruit | Custom | Limited | JSON product feeds |
+| Vendor        | Platform           | API Available           | Notes                            |
+| ------------- | ------------------ | ----------------------- | -------------------------------- |
+| REV Robotics  | Shopify-like       | Possibly Storefront API | Uses standard Shopify structure  |
+| goBILDA       | BigCommerce        | Limited                 | Custom scraping needed           |
+| AndyMark      | Custom/WooCommerce | No                      | Custom scraping needed           |
+| ServoCity     | Custom             | No                      | Related to goBILDA               |
+| McMaster-Carr | Custom             | **Yes**                 | Official Product Information API |
+| SparkFun      | Custom             | Limited                 | RSS feeds available              |
+| Adafruit      | Custom             | Limited                 | JSON product feeds               |
 
 ### Detecting Shopify Stores
 
@@ -1502,10 +1555,10 @@ const query = `
 To avoid overwhelming vendor websites or getting blocked:
 
 | Vendor Tier | Requests/minute | Batch size | Delay between batches |
-|-------------|-----------------|------------|----------------------|
-| Tier 1 | 20 | 10 | 30 seconds |
-| Tier 2 | 10 | 5 | 60 seconds |
-| Tier 3 | 5 | 1 | 120 seconds |
+| ----------- | --------------- | ---------- | --------------------- |
+| Tier 1      | 20              | 10         | 30 seconds            |
+| Tier 2      | 10              | 5          | 60 seconds            |
+| Tier 3      | 5               | 1          | 120 seconds           |
 
 ### Implementation
 
@@ -1543,40 +1596,37 @@ async function processWithRateLimit<T>(
 
 ```typescript
 const scrapeRetryPolicy: RetryPolicy = {
-  initialInterval: '10 seconds',
+  initialInterval: "10 seconds",
   backoffCoefficient: 2,
-  maximumInterval: '5 minutes',
+  maximumInterval: "5 minutes",
   maximumAttempts: 3,
-  nonRetryableErrorTypes: [
-    'ProductNotFoundError',
-    'VendorBlockedError',
-  ],
+  nonRetryableErrorTypes: ["ProductNotFoundError", "VendorBlockedError"],
 };
 
 const apiRetryPolicy: RetryPolicy = {
-  initialInterval: '1 second',
+  initialInterval: "1 second",
   backoffCoefficient: 2,
-  maximumInterval: '30 seconds',
+  maximumInterval: "30 seconds",
   maximumAttempts: 5,
 };
 
 const notificationRetryPolicy: RetryPolicy = {
-  initialInterval: '5 seconds',
+  initialInterval: "5 seconds",
   backoffCoefficient: 1.5,
-  maximumInterval: '1 minute',
+  maximumInterval: "1 minute",
   maximumAttempts: 10,
 };
 ```
 
 ### Common Errors
 
-| Error | Cause | Resolution |
-|-------|-------|------------|
-| 403 Forbidden | Bot detection | Rotate user agent, add delays |
-| 429 Too Many Requests | Rate limit | Increase delays, reduce batch size |
-| Timeout | Slow page load | Increase timeout, check network |
-| Selector not found | Page structure changed | Update vendor-specific extractor |
-| Invalid JSON-LD | Malformed structured data | Fall back to HTML extraction |
+| Error                 | Cause                     | Resolution                         |
+| --------------------- | ------------------------- | ---------------------------------- |
+| 403 Forbidden         | Bot detection             | Rotate user agent, add delays      |
+| 429 Too Many Requests | Rate limit                | Increase delays, reduce batch size |
+| Timeout               | Slow page load            | Increase timeout, check network    |
+| Selector not found    | Page structure changed    | Update vendor-specific extractor   |
+| Invalid JSON-LD       | Malformed structured data | Fall back to HTML extraction       |
 
 ---
 
