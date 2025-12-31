@@ -1,9 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -32,6 +43,7 @@ import {
   Check,
   AlertTriangle,
   XCircle,
+  Loader2,
 } from "lucide-react";
 
 type BomSearchParams = {
@@ -81,9 +93,17 @@ function RobotBomPage() {
   const { program, number, robotId } = Route.useParams();
   const searchParams = Route.useSearch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedSubsystem, setSelectedSubsystem] = useState(
     searchParams.subsystem || "all"
   );
+
+  // Dialog state
+  const [allocateDialogOpen, setAllocateDialogOpen] = useState(false);
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<BomItem | null>(null);
+  const [allocateQuantity, setAllocateQuantity] = useState(0);
+  const [returnQuantity, setReturnQuantity] = useState(0);
 
   // Get team info
   const { data: teams } = useQuery({
@@ -144,6 +164,110 @@ function RobotBomPage() {
     },
     enabled: !!teamId && !!robotId,
   });
+
+  // Allocate mutation
+  const allocateMutation = useMutation({
+    mutationFn: async ({
+      bomItemId,
+      quantity,
+    }: {
+      bomItemId: string;
+      quantity: number;
+    }) => {
+      const res = await fetch(
+        `/api/teams/${teamId}/robots/${robotId}/bom/${bomItemId}/allocate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity }),
+        }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to allocate parts");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Parts allocated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["teams", teamId, "robots", robotId, "bom"],
+      });
+      setAllocateDialogOpen(false);
+      setSelectedItem(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  // Return mutation
+  const returnMutation = useMutation({
+    mutationFn: async ({
+      bomItemId,
+      quantity,
+    }: {
+      bomItemId: string;
+      quantity: number;
+    }) => {
+      const res = await fetch(
+        `/api/teams/${teamId}/robots/${robotId}/bom/${bomItemId}/return`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity }),
+        }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to return parts");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Parts returned to inventory");
+      queryClient.invalidateQueries({
+        queryKey: ["teams", teamId, "robots", robotId, "bom"],
+      });
+      setReturnDialogOpen(false);
+      setSelectedItem(null);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  // Dialog handlers
+  const openAllocateDialog = (item: BomItem) => {
+    setSelectedItem(item);
+    const gap = item.quantityNeeded - item.quantityAllocated;
+    setAllocateQuantity(Math.min(gap, item.availableInInventory));
+    setAllocateDialogOpen(true);
+  };
+
+  const openReturnDialog = (item: BomItem) => {
+    setSelectedItem(item);
+    setReturnQuantity(item.quantityAllocated);
+    setReturnDialogOpen(true);
+  };
+
+  const handleAllocate = () => {
+    if (selectedItem && allocateQuantity > 0) {
+      allocateMutation.mutate({
+        bomItemId: selectedItem.id,
+        quantity: allocateQuantity,
+      });
+    }
+  };
+
+  const handleReturn = () => {
+    if (selectedItem && returnQuantity > 0) {
+      returnMutation.mutate({
+        bomItemId: selectedItem.id,
+        quantity: returnQuantity,
+      });
+    }
+  };
 
   // Get unique subsystems from BOM items
   const subsystems = Array.from(
@@ -494,12 +618,26 @@ function RobotBomPage() {
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
                                 {gap > 0 && item.availableInInventory > 0 && (
-                                  <Button size="sm" variant="outline">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openAllocateDialog(item);
+                                    }}
+                                  >
                                     Allocate
                                   </Button>
                                 )}
                                 {item.quantityAllocated > 0 && (
-                                  <Button size="sm" variant="ghost">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openReturnDialog(item);
+                                    }}
+                                  >
                                     Return
                                   </Button>
                                 )}
@@ -515,6 +653,153 @@ function RobotBomPage() {
             ))}
         </div>
       )}
+
+      {/* Allocate Dialog */}
+      <Dialog open={allocateDialogOpen} onOpenChange={setAllocateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Allocate Parts</DialogTitle>
+            <DialogDescription>
+              Allocate parts from inventory to this robot's BOM
+            </DialogDescription>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Part</p>
+                  <p className="font-medium">{selectedItem.partName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Needed</p>
+                  <p className="font-medium">{selectedItem.quantityNeeded}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Currently Allocated
+                  </p>
+                  <p className="font-medium">
+                    {selectedItem.quantityAllocated}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Available in Inventory
+                  </p>
+                  <p className="font-medium">
+                    {selectedItem.availableInInventory}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="allocateQuantity">Quantity to Allocate</Label>
+                <Input
+                  id="allocateQuantity"
+                  type="number"
+                  min={1}
+                  max={Math.min(
+                    selectedItem.quantityNeeded -
+                      selectedItem.quantityAllocated,
+                    selectedItem.availableInInventory
+                  )}
+                  value={allocateQuantity}
+                  onChange={(e) =>
+                    setAllocateQuantity(parseInt(e.target.value) || 0)
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Max:{" "}
+                  {Math.min(
+                    selectedItem.quantityNeeded -
+                      selectedItem.quantityAllocated,
+                    selectedItem.availableInInventory
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAllocateDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAllocate}
+              disabled={allocateMutation.isPending || allocateQuantity < 1}
+            >
+              {allocateMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Allocate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Return Dialog */}
+      <Dialog open={returnDialogOpen} onOpenChange={setReturnDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Return Parts to Inventory</DialogTitle>
+            <DialogDescription>
+              Return allocated parts back to inventory
+            </DialogDescription>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Part</p>
+                  <p className="font-medium">{selectedItem.partName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Currently Allocated
+                  </p>
+                  <p className="font-medium">
+                    {selectedItem.quantityAllocated}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="returnQuantity">Quantity to Return</Label>
+                <Input
+                  id="returnQuantity"
+                  type="number"
+                  min={1}
+                  max={selectedItem.quantityAllocated}
+                  value={returnQuantity}
+                  onChange={(e) =>
+                    setReturnQuantity(parseInt(e.target.value) || 0)
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Max: {selectedItem.quantityAllocated}
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setReturnDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReturn}
+              disabled={returnMutation.isPending || returnQuantity < 1}
+            >
+              {returnMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Return to Inventory
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
