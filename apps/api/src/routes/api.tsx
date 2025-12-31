@@ -27,6 +27,8 @@ import {
   createOrderSchema,
   updateOrderSchema,
   rejectOrderSchema,
+  createBomItemSchema,
+  updateBomItemSchema,
   updateMemberRoleSchema,
   createInviteSchema,
   formatZodError,
@@ -646,13 +648,20 @@ const teamOrdersRoutes = new Hono<{
 
     const { vendorId, items, notes } = result.data;
 
+    if (!vendorId) {
+      return c.json(
+        { error: "Vendor is required for orders", code: "validation_error" },
+        400
+      );
+    }
+
     try {
       const orderId = crypto.randomUUID();
 
       await db.insert(orders).values({
         id: orderId,
         teamId,
-        vendorId: vendorId || null,
+        vendorId,
         status: "draft",
         notes: notes || null,
         createdById: user.id,
@@ -710,14 +719,20 @@ const teamOrdersRoutes = new Hono<{
     }
 
     try {
-      await db
-        .update(orders)
-        .set({
-          vendorId: vendorId || null,
-          notes: notes || null,
-          updatedAt: new Date(),
-        })
-        .where(eq(orders.id, orderId));
+      const updateData: {
+        vendorId?: string;
+        notes: string | null;
+        updatedAt: Date;
+      } = {
+        notes: notes || null,
+        updatedAt: new Date(),
+      };
+
+      if (vendorId) {
+        updateData.vendorId = vendorId;
+      }
+
+      await db.update(orders).set(updateData).where(eq(orders.id, orderId));
 
       return c.json({ success: true });
     } catch (error) {
@@ -831,11 +846,12 @@ const teamBomRoutes = new Hono<{ Variables: AuthVariables & TeamVariables }>()
     const teamId = c.get("teamId");
     const body = await c.req.json();
 
-    const { partId, subsystem, quantityNeeded, notes } = body;
-
-    if (!partId || !subsystem) {
-      return c.json({ error: "Part and subsystem are required" }, 400);
+    const result = createBomItemSchema.safeParse(body);
+    if (!result.success) {
+      return c.json(formatZodError(result.error), 400);
     }
+
+    const { partId, subsystem, quantityNeeded, notes } = result.data;
 
     try {
       const bomId = crypto.randomUUID();
@@ -845,8 +861,8 @@ const teamBomRoutes = new Hono<{ Variables: AuthVariables & TeamVariables }>()
         teamId,
         partId,
         subsystem,
-        quantityNeeded: parseInt(quantityNeeded) || 1,
-        notes: notes?.trim() || null,
+        quantityNeeded,
+        notes: notes || null,
       });
 
       return c.json({ id: bomId });
@@ -860,6 +876,13 @@ const teamBomRoutes = new Hono<{ Variables: AuthVariables & TeamVariables }>()
     const itemId = c.req.param("itemId");
     const body = await c.req.json();
 
+    const result = updateBomItemSchema.safeParse(body);
+    if (!result.success) {
+      return c.json(formatZodError(result.error), 400);
+    }
+
+    const { subsystem, quantityNeeded, notes } = result.data;
+
     const existingItem = await db.query.bomItems.findFirst({
       where: and(eq(bomItems.id, itemId), eq(bomItems.teamId, teamId)),
     });
@@ -872,9 +895,9 @@ const teamBomRoutes = new Hono<{ Variables: AuthVariables & TeamVariables }>()
       await db
         .update(bomItems)
         .set({
-          subsystem: body.subsystem,
-          quantityNeeded: parseInt(body.quantityNeeded) || 1,
-          notes: body.notes?.trim() || null,
+          subsystem: subsystem ?? existingItem.subsystem,
+          quantityNeeded,
+          notes: notes || null,
           updatedAt: new Date(),
         })
         .where(eq(bomItems.id, itemId));
