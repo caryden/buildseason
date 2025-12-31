@@ -331,6 +331,24 @@
   }
 }
 
+/* Sidebar collapsed state fixes - Tailwind v4 group-data selectors */
+@layer utilities {
+  /* Gap div collapsed width */
+  .group[data-collapsible="icon"] .group-data-\[collapsible\=icon\]\:w-\[--sidebar-width-icon\] {
+    width: var(--sidebar-width-icon);
+  }
+
+  /* Fixed sidebar collapsed width */
+  .group[data-collapsible="icon"] .group-data-\[collapsible\=icon\]\:w-\[calc\(var\(--sidebar-width-icon\)_\+_theme\(spacing\.4\)_\+2px\)\] {
+    width: calc(var(--sidebar-width-icon) + 1rem + 2px);
+  }
+
+  /* Sidebar content margin when collapsed */
+  .peer[data-state="collapsed"] ~ .peer-data-\[state\=collapsed\]\:ml-12 {
+    margin-left: 3rem;
+  }
+}
+
 /* Component overrides for the new design system */
 @layer components {
   /* Enhanced button styles */
